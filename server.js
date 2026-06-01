@@ -59,7 +59,7 @@ app.post('/api/recommendations',async(req,res)=>{
         'Rules:\n'+
         '- Return EXACTLY 30 unique spots per city (include ALL '+cityList.length+' cities)\n'+
         '- Every object MUST have: city, name, type, description, tips, duration, priceRange\n'+
-        '- Types: beach,food,culture,nature,shopping,entertainment,temple,market,museum,spa\n'+
+        '- Types: beach,food,culture,nature,shopping,entertainment,temple,market,museum,spa\n'+ 
         'Respond ONLY with JSON:\n'+
         '{"destinations":[\n'+
         '{"city":"Busan","name":"Haeundae Beach","type":"beach","description":"Famous beach.","tips":"Go early.","duration":"2-3h","priceRange":"Free"},\n'+
