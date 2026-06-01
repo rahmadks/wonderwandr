@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WonderWandr ✈️</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  .int-on  { background:#d1fae5!important;border-color:#10b981!important;color:#065f46!important; }
+  .int-off { background:#fff;border-color:#e2e8f0;color:#64748b; }
+  .int-off:hover { border-color:#6ee7b7;color:#047857; }
+  .pref-on  { background:#d1fae5;border-color:#10b981;color:#065f46;font-weight:700; }
+  .pref-off { background:#fff;border-color:#e2e8f0;color:#64748b; }
+  .pref-off:hover { border-color:#6ee7b7; }
+  .card-sel { border-color:#10b981!important;background:#f0fdf4!important; }
+  .dest-img { width:100%;height:130px;object-fit:cover;display:block; }
+  .img-fb   { display:none;width:100%;height:130px;align-items:center;justify-content:center;font-size:2.8rem; }
+  .dp       { display:block; }
+  .dp-hide  { display:none; }
+
+  /* Transport connector pill */
+  .transport-pill {
+    display:flex;align-items:center;gap-8px;margin:4px 0 4px 44px;
+    padding:5px 10px;background:#eff6ff;border:1px solid #bfdbfe;
+    border-radius:20px;font-size:10px;color:#1d4ed8;width:fit-content;
+  }
+  .transport-pill span { color:#64748b;margin-left:4px; }
+
+  /* Transit day */
+  .transit-day { background:#fffbeb;border-color:#fcd34d!important; }
+  .transit-opt { display:flex;align-items:center;justify-content:space-between;
+    padding:8px 12px;border-radius:10px;margin-bottom:6px;border:1px solid #fde68a; }
+  .transit-opt.recommended { background:#fef3c7;border-color:#f59e0b; }
+  .transit-opt.normal { background:#fff;border-color:#e5e7eb; }
+
+  /* Adjust mode */
+  .adj-controls { display:none;gap:3px;margin-top:6px;flex-wrap:wrap; }
+  .adj-on .adj-controls { display:flex!important; }
+  .adj-btn {
+    padding:2px 7px;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;
+    border:1px solid #e2e8f0;background:#f8fafc;color:#475569;transition:all .15s;
+    user-select:none;
+  }
+  .adj-btn:hover { background:#e2e8f0;color:#1e293b; }
+  .adj-btn.danger { border-color:#fecaca;background:#fff5f5;color:#ef4444; }
+  .adj-btn.danger:hover { background:#fee2e2; }
+  .act-card { position:relative;transition:box-shadow .15s; }
+  .act-card.dragging { opacity:0.5; }
+
+  /* Active tab */
+  .tab-active { background:#10b981!important;color:#fff!important; }
+
+  /* Toast */
+  #toast {
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+    background:#1e293b;color:#fff;font-size:11px;font-weight:700;
+    padding:8px 18px;border-radius:99px;box-shadow:0 4px 20px rgba(0,0,0,.25);
+    opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999;white-space:nowrap;
+  }
+  #toast.show { opacity:1; }
+
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+  input,select,button{font-family:inherit}
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<!-- HEADER -->
+<header class="bg-white border-b h-14 px-6 flex items-center justify-between shadow-sm shrink-0 z-20">
+  <div class="flex items-center gap-2">
+    <span class="text-xl">✈️</span>
+    <h1 class="text-lg font-black text-emerald-600">wonder<span class="text-slate-800">wandr.</span></h1>
+  </div>
+  <div class="flex items-center gap-2"><a href="landing.html" class="text-xs font-bold text-slate-500 hover:text-emerald-600 transition px-3 py-1.5 rounded-lg hover:bg-slate-100">🏠 Home</a><span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">AI Travel Planner</span></div>
+</header>
+
+<div class="flex flex-1 overflow-hidden">
+
+<!-- ══════ SIDEBAR ══════ -->
+<aside class="w-[370px] bg-white border-r flex flex-col overflow-y-auto shrink-0">
+<div class="p-4 flex flex-col gap-4">
+
+  <!-- Language -->
+  <div class="bg-slate-900 p-3 rounded-xl">
+    <p class="text-[9px] uppercase font-bold tracking-widest text-slate-400 mb-2">🌐 Language / Pilih Bahasa</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="btn-en" onclick="setLang('en')" class="py-2 rounded-lg text-xs font-bold cursor-pointer bg-emerald-600 text-white">🇬🇧 English</button>
+      <button id="btn-id" onclick="setLang('id')" class="py-2 rounded-lg text-xs font-bold cursor-pointer bg-slate-700 text-slate-400 hover:text-white">🇮🇩 Indonesia</button>
+    </div>
+  </div>
+
+  <!-- Trip Setup -->
+  <div class="bg-slate-50 border rounded-xl p-4 flex flex-col gap-3">
+    <h3 id="lbl-setup" class="text-[10px] font-black uppercase tracking-widest text-slate-400">Trip Setup</h3>
+    <div>
+      <label id="lbl-cities" class="text-[10px] font-bold text-slate-600 block mb-1">Destinations</label>
+      <input type="text" id="cities" value="Busan, Seoul"
+        class="w-full border p-2 rounded-lg text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label id="lbl-days" class="text-[10px] font-bold text-slate-600 block mb-1">Days</label>
+        <input type="number" id="trip-days" value="5" min="1" max="30"
+          class="w-full border p-2 rounded-lg text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+      </div>
+      <div>
+        <label id="lbl-budget" class="text-[10px] font-bold text-slate-600 block mb-1">Budget</label>
+        <div class="flex gap-1">
+          <input type="number" id="budget" value="15000000" oninput="onBudgetChange()"
+            class="border p-2 rounded-l-lg text-xs font-bold bg-white min-w-0 w-full focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          <select id="main-cur" onchange="onBudgetChange()"
+            class="border p-2 rounded-r-lg text-xs font-bold bg-slate-100 cursor-pointer shrink-0">
+            <option value="IDR" selected>IDR</option><option value="USD">USD</option>
+            <option value="SGD">SGD</option><option value="KRW">KRW</option>
+            <option value="JPY">JPY</option><option value="EUR">EUR</option>
+            <option value="GBP">GBP</option><option value="MYR">MYR</option><option value="THB">THB</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interests -->
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <label id="lbl-interests" class="text-[10px] font-bold text-slate-600">Interests</label>
+        <span id="int-count" class="text-[9px] text-emerald-600 font-bold"></span>
+      </div>
+      <div id="int-grid" class="grid grid-cols-3 gap-1.5"></div>
+    </div>
+
+    <!-- Pace -->
+    <div>
+      <label id="lbl-pace" class="text-[10px] font-bold text-slate-600 block mb-1.5">Travel Pace</label>
+      <div class="grid grid-cols-3 gap-1">
+        <button id="pace-relaxed"  type="button" onclick="setPace('Relaxed')"  class="pref-off border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all">🌿 Relaxed</button>
+        <button id="pace-moderate" type="button" onclick="setPace('Moderate')" class="pref-on  border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all">🚶 Moderate</button>
+        <button id="pace-packed"   type="button" onclick="setPace('Packed')"   class="pref-off border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all">⚡ Packed</button>
+      </div>
+    </div>
+
+    <!-- Style -->
+    <div>
+      <label id="lbl-style" class="text-[10px] font-bold text-slate-600 block mb-1.5">Accommodation</label>
+      <div class="grid grid-cols-3 gap-1">
+        <button id="style-budget"  type="button" onclick="setStyle('Budget')"    class="pref-off border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all">🎒 Budget</button>
+        <button id="style-mid"     type="button" onclick="setStyle('Mid-range')" class="pref-on  border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all">🏨 Mid</button>
+        <button id="style-luxury"  type="button" onclick="setStyle('Luxury')"    class="pref-off border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all">✨ Luxury</button>
+      </div>
+    </div>
+
+    <button id="ai-btn" onclick="generateDests()"
+      class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl shadow-md transition active:scale-95 cursor-pointer">
+      ✨ Generate AI Recommendations
+    </button>
+  </div>
+
+  <!-- Budget Dashboard -->
+  <div class="bg-white border rounded-xl p-4 flex flex-col gap-3">
+    <h3 id="lbl-tracker" class="text-[10px] font-black uppercase tracking-widest text-slate-400">📊 Budget Dashboard</h3>
+    <div class="grid grid-cols-2 gap-2 text-center">
+      <div class="bg-slate-50 border rounded-xl p-2.5">
+        <span id="lbl-spent"   class="text-[9px] text-slate-400 font-bold uppercase block">Spent</span>
+        <div  id="spent-val"   class="text-sm font-black text-red-500 mt-0.5">0</div>
+      </div>
+      <div class="bg-slate-50 border rounded-xl p-2.5">
+        <span id="lbl-balance" class="text-[9px] text-slate-400 font-bold uppercase block">Balance</span>
+        <div  id="balance-val" class="text-sm font-black text-emerald-600 mt-0.5">0</div>
+      </div>
+    </div>
+    <div class="h-28 relative"><canvas id="budget-chart"></canvas></div>
+  </div>
+
+  <!-- Trip Members -->
+  <div class="bg-white border rounded-xl p-4 flex flex-col gap-2">
+    <h3 id="lbl-members" class="text-[10px] font-black uppercase tracking-widest text-slate-400">👥 Trip Members</h3>
+    <p class="text-[10px] text-slate-400">Members appear as "Who Paid?" in expenses.</p>
+    <div class="flex gap-1.5">
+      <input type="text" id="member-input" placeholder="Add traveller name..."
+        class="flex-1 border p-2 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+        onkeydown="if(event.key==='Enter') addMember()">
+      <button onclick="addMember()"
+        class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg cursor-pointer transition">
+        + Add
+      </button>
+    </div>
+    <div id="member-list" class="flex flex-wrap gap-1.5 min-h-[24px]"></div>
+  </div>
+
+  <!-- Expense Form -->
+  <div class="bg-white border rounded-xl p-4 flex flex-col gap-2">
+    <h3 id="lbl-addexp" class="text-[10px] font-black uppercase tracking-widest text-slate-400">Add Expense</h3>
+    <input type="text" id="exp-title" placeholder="Item name..."
+      class="w-full border p-2 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+    <div class="grid grid-cols-2 gap-2">
+      <input type="number" id="exp-amt" placeholder="Amount"
+        class="border p-2 rounded-lg text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+      <select id="exp-cur" class="border p-2 rounded-lg text-xs font-bold bg-white cursor-pointer">
+        <option value="IDR">IDR</option><option value="USD">USD</option><option value="SGD">SGD</option>
+        <option value="KRW">KRW</option><option value="JPY">JPY</option><option value="EUR">EUR</option>
+      </select>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <input type="text" id="exp-spender" placeholder="Spender name"
+        class="border p-2 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+      <input type="date" id="exp-date"
+        class="border p-2 rounded-lg text-xs bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400">
+    </div>
+    <select id="exp-source" class="w-full border p-2 rounded-lg text-xs bg-white cursor-pointer">
+      <option value="">— Who Paid? —</option>
+    </select>
+    <p id="exp-err" class="text-[10px] text-red-500 hidden"></p>
+    <button id="exp-btn" onclick="addExpense()"
+      class="w-full bg-slate-900 text-white font-bold text-xs py-2 rounded-lg hover:bg-slate-700 transition cursor-pointer">
+      ➕ Submit Expense
+    </button>
+  </div>
+
+  <!-- Ledger -->
+  <div class="bg-white border rounded-xl p-4">
+    <h3 id="lbl-ledger" class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Expense Ledger</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-[10px] min-w-[420px]">
+        <thead>
+          <tr class="border-b-2 border-slate-200 text-slate-500">
+            <th id="th-date"    class="text-left pb-1 pr-2 font-bold">Date</th>
+            <th id="th-spender" class="text-left pb-1 pr-2 font-bold">Spender</th>
+            <th id="th-item"    class="text-left pb-1 pr-2 font-bold">Item</th>
+            <th id="th-source"  class="text-left pb-1 pr-2 font-bold">Source</th>
+            <th id="th-orig"    class="text-right pb-1 pr-2 font-bold">Original</th>
+            <th id="th-conv"    class="text-right pb-1 font-bold">Deducted</th>
+          </tr>
+        </thead>
+        <tbody id="ledger-body"></tbody>
+      </table>
+      <p id="ledger-empty" class="text-center py-4 text-slate-300 text-xs">No expenses logged yet</p>
+    </div>
+  </div>
+
+</div>
+</aside>
+
+<!-- ══════ MAIN ══════ -->
+<main class="flex-1 p-5 overflow-y-auto flex flex-col gap-5">
+
+  <!-- Itinerary Panel -->
+  <div id="itin-panel" class="hidden bg-white rounded-2xl border p-5 shadow-sm">
+
+    <!-- Panel header -->
+    <div class="flex justify-between items-start border-b pb-3 mb-4 gap-4">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap mb-2">
+          <h2 id="itin-heading" class="font-black text-sm uppercase tracking-wide">Your Itinerary</h2>
+          <!-- Action buttons -->
+          <div class="flex gap-1.5 ml-auto">
+            <button id="adj-toggle-btn" onclick="toggleAdjust()"
+              class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200 bg-white text-slate-600 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer">
+              ✏️ Adjust
+            </button>
+            <button onclick="saveItin()"
+              class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200 bg-white text-slate-600 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer">
+              💾 Save
+            </button>
+            <button onclick="loadItin()"
+              class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer">
+              📂 Load
+            </button>
+          </div>
+        </div>
+        <!-- Adjust mode banner -->
+        <div id="adj-banner" class="hidden bg-amber-50 border border-amber-300 rounded-lg p-2 mb-2">
+          <p class="text-[10px] font-bold text-amber-700">✏️ Adjust Mode — use the buttons on each activity to reorder, move between days, or change the time.</p>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+          <span class="text-[9px] font-black uppercase text-emerald-700 tracking-wider block mb-1">📋 Trip Overview</span>
+          <p id="itin-summary" class="text-xs text-slate-600 leading-relaxed"></p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('itin-panel').classList.add('hidden')"
+        class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer text-lg">✕</button>
+    </div>
+
+    <!-- Day tabs -->
+    <div id="day-tabs"    class="flex gap-2 mb-4 overflow-x-auto pb-1 flex-wrap"></div>
+    <div id="day-content" class=""></div>
+  </div>
+
+  <!-- Destination Pool -->
+  <div class="bg-white rounded-2xl border p-5 shadow-sm">
+    <div class="flex justify-between items-center border-b pb-3 mb-5">
+      <div>
+        <h2 id="lbl-pool" class="font-black text-sm uppercase tracking-wide">Multi-City Destination Pool</h2>
+        <p id="lbl-pool-sub" class="text-xs text-slate-400 mt-0.5">Click a card to select it for your itinerary.</p>
+      </div>
+      <span id="sel-badge" class="hidden text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold"></span>
+    </div>
+    <div id="pool">
+      <div class="text-center py-16 text-slate-300 text-sm border-2 border-dashed rounded-xl">
+        🗺️ Enter destinations and click "Generate AI Recommendations" to start
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate bar -->
+  <div id="itin-bar" class="hidden bg-white rounded-2xl border p-4 shadow-lg flex items-center justify-between gap-4 flex-wrap sticky bottom-0 z-20">
+    <div>
+      <p id="bar-count" class="font-black text-slate-800 text-sm">0 selected</p>
+      <p id="bar-hint"  class="text-xs text-slate-400 mt-0.5">Select destinations above first</p>
+    </div>
+    <button id="itin-btn" onclick="generateItinerary()" disabled
+      class="bg-slate-200 text-slate-400 font-black text-sm px-6 py-3 rounded-xl transition-all cursor-not-allowed">
+      🗓️ <span id="itin-btn-txt">Generate Itinerary</span>
+    </button>
+  </div>
+
+</main>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     CLIENT JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── Constants ─────────────────────────────────────────────────────
+const INTS = [
+  {id:'culinary',    en:'Culinary',    id_:'Kuliner',     e:'🍜'},
+  {id:'culture',     en:'Culture',     id_:'Budaya',      e:'🏛️'},
+  {id:'nature',      en:'Nature',      id_:'Alam',        e:'🌿'},
+  {id:'beach',       en:'Beach',       id_:'Pantai',      e:'🏖️'},
+  {id:'shopping',    en:'Shopping',    id_:'Belanja',     e:'🛍️'},
+  {id:'nightlife',   en:'Nightlife',   id_:'Malam',       e:'🌙'},
+  {id:'temples',     en:'Temples',     id_:'Kuil',        e:'⛩️'},
+  {id:'wellness',    en:'Wellness',    id_:'Wellness',    e:'🧘'},
+  {id:'adventure',   en:'Adventure',   id_:'Petualangan', e:'🧗'},
+  {id:'museums',     en:'Museums',     id_:'Museum',      e:'🏛️'},
+  {id:'photography', en:'Photography', id_:'Fotografi',   e:'📸'},
+  {id:'markets',     en:'Markets',     id_:'Pasar',       e:'🏪'},
+];
+
+const CMAP = {
+  beach:        {c:'#3b82f6',bg:'#eff6ff',tag:'bg-blue-100 text-blue-700',    e:'🏖️',l:'Beach'},
+  food:         {c:'#f97316',bg:'#fff7ed',tag:'bg-orange-100 text-orange-700',e:'🍜',l:'Culinary'},
+  culture:      {c:'#8b5cf6',bg:'#f5f3ff',tag:'bg-purple-100 text-purple-700',e:'🏛️',l:'Culture'},
+  nature:       {c:'#22c55e',bg:'#f0fdf4',tag:'bg-green-100 text-green-700',  e:'🌿',l:'Nature'},
+  shopping:     {c:'#ec4899',bg:'#fdf2f8',tag:'bg-pink-100 text-pink-700',    e:'🛍️',l:'Shopping'},
+  entertainment:{c:'#eab308',bg:'#fefce8',tag:'bg-yellow-100 text-yellow-700',e:'🎭',l:'Entertainment'},
+  temple:       {c:'#f59e0b',bg:'#fffbeb',tag:'bg-amber-100 text-amber-700',  e:'⛩️',l:'Temple'},
+  market:       {c:'#ef4444',bg:'#fef2f2',tag:'bg-red-100 text-red-700',      e:'🏪',l:'Market'},
+  museum:       {c:'#64748b',bg:'#f8fafc',tag:'bg-slate-100 text-slate-600',  e:'🏛️',l:'Museum'},
+  spa:          {c:'#14b8a6',bg:'#f0fdfa',tag:'bg-teal-100 text-teal-700',    e:'🧖',l:'Wellness'},
+};
+const CDEF = {c:'#10b981',bg:'#f0fdf4',tag:'bg-emerald-100 text-emerald-700',e:'📍',l:'Attraction'};
+
+const DICT = {
+  en:{
+    setup:'Trip Setup',cities:'Destinations',interests:'Interests',budget:'Budget',days:'Days',
+    pace:'Travel Pace',style:'Accommodation',tracker:'📊 Budget Dashboard',
+    spent:'Spent',balance:'Balance',addexp:'Add Expense',expBtn:'➕ Submit Expense',
+    ledger:'Expense Ledger',pool:'Multi-City Destination Pool',
+    poolSub:'Click a card to select it for your itinerary.',
+    genItin:'Generate Itinerary',itinHeading:'Your Itinerary',
+    btnAi:'✨ Generate AI Recommendations',btnLoad:'⏳ Generating...',
+    itinLoad:'⏳ Building itinerary...',barHint:'Select destinations above first',
+    chart1:'Budget',chart2:'Spent',day:'Day',dayTotal:'Day Total',
+    thDate:'Date',thSpender:'Spender',thItem:'Item',thSource:'Source',thOrig:'Original',thConv:'Deducted',
+    errFields:'Fill all fields.',errDests:'Could not load destinations.',errItin:'Could not build itinerary.',
+    intSel:' selected',saved:'✅ Itinerary saved!',loaded:'📂 Itinerary loaded!',
+    noSave:'No saved itinerary found.',transitDay:'Travel Day',transitOptions:'Transport Options',
+    recommended:'⭐ Recommended',
+  },
+  id:{
+    setup:'Pengaturan',cities:'Destinasi',interests:'Minat',budget:'Anggaran',days:'Hari',
+    pace:'Tempo',style:'Akomodasi',tracker:'📊 Dasbor Anggaran',
+    spent:'Terpakai',balance:'Sisa',addexp:'Tambah Pengeluaran',expBtn:'➕ Catat',
+    ledger:'Buku Besar',pool:'Kolam Destinasi',poolSub:'Klik kartu untuk memilih.',
+    genItin:'Buat Itinerary',itinHeading:'Rencana Perjalanan',
+    btnAi:'✨ Buat Rekomendasi AI',btnLoad:'⏳ Memproses...',
+    itinLoad:'⏳ Merancang...',barHint:'Pilih destinasi terlebih dahulu',
+    chart1:'Anggaran',chart2:'Terpakai',day:'Hari',dayTotal:'Total Hari',
+    thDate:'Tanggal',thSpender:'Pembayar',thItem:'Item',thSource:'Sumber',thOrig:'Jumlah',thConv:'Dipotong',
+    errFields:'Isi semua kolom.',errDests:'Gagal memuat.',errItin:'Gagal buat itinerary.',
+    intSel:' dipilih',saved:'✅ Itinerary tersimpan!',loaded:'📂 Itinerary dimuat!',
+    noSave:'Belum ada itinerary tersimpan.',transitDay:'Hari Perjalanan',transitOptions:'Pilihan Transportasi',
+    recommended:'⭐ Rekomendasi',
+  },
+};
+
+// ── App State ──────────────────────────────────────────────────────
+let lang       = 'en';
+let selInts    = {culinary:1,culture:1,nature:1,beach:1};
+let tPace      = 'Moderate';
+let tStyle     = 'Mid-range';
+let state      = {master:15000000,spent:0};
+let chartInst  = null;
+let itinData    = null;
+let adjustMode  = false;
+let activeDayIdx = 0;
+let members     = [];
+
+// ── Helpers ────────────────────────────────────────────────────────
+const gi  = id    => document.getElementById(id);
+const st  = (id,v) => { const e=gi(id); if(e) e.innerText=v; };
+const cur = ()    => gi('main-cur').value;
+const esc = s     => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── Toast ──────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = gi('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+
+// ── Trip Members ───────────────────────────────────────────────────
+function loadMembers() {
+  try { members = JSON.parse(localStorage.getItem('wonderwandr_members')||'[]'); } catch{ members=[]; }
+  renderMembers();
+}
+function saveMembers() {
+  localStorage.setItem('wonderwandr_members', JSON.stringify(members));
+}
+function addMember() {
+  const inp = gi('member-input');
+  const name = (inp.value||'').trim();
+  if (!name) return;
+  if (members.includes(name)) { showToast('⚠️ Already added'); return; }
+  members.push(name);
+  saveMembers(); renderMembers();
+  inp.value = '';
+}
+function removeMember(name) {
+  members = members.filter(m => m !== name);
+  saveMembers(); renderMembers();
+}
+function renderMembers() {
+  const list = gi('member-list');
+  const sel  = gi('exp-source');
+  if (!list || !sel) return;
+  list.innerHTML = '';
+  members.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full px-2.5 py-1 text-[10px] font-bold';
+    chip.innerHTML = `<span>${name}</span><button onclick="removeMember('${name.replace(/'/g,"\'")}')" class="text-emerald-400 hover:text-red-500 ml-0.5 font-black cursor-pointer">×</button>`;
+    list.appendChild(chip);
+  });
+  // Rebuild source dropdown
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Who Paid? —</option>';
+  if (members.length === 0) {
+    sel.innerHTML += '<option value="" disabled>Add members above first</option>';
+  } else {
+    members.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.innerText = '👤 ' + name;
+      if (name === prev) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+// ── Language ───────────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  const d = DICT[l];
+  gi('btn-en').className = `py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${l==='en'?'bg-emerald-600 text-white':'bg-slate-700 text-slate-400 hover:text-white'}`;
+  gi('btn-id').className = `py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${l==='id'?'bg-emerald-600 text-white':'bg-slate-700 text-slate-400 hover:text-white'}`;
+  ['setup','cities','interests','budget','days','pace','style','tracker','spent','balance','addexp','ledger','pool'].forEach(k => {
+    const e=gi(`lbl-${k}`); if(e&&d[k]) e.innerText=d[k];
+  });
+  st('lbl-pool-sub',d.poolSub); st('itin-btn-txt',d.genItin); st('bar-hint',d.barHint);
+  ['date','spender','item','source','orig','conv'].forEach(k => st(`th-${k}`,d[`th${k.charAt(0).toUpperCase()+k.slice(1)}`]));
+  const eb=gi('exp-btn'); if(eb) eb.innerText=d.expBtn;
+  const ab=gi('ai-btn');  if(ab&&!ab.disabled) ab.innerText=d.btnAi;
+  renderInts(); refreshTracker();
+}
+
+// ── Interest chips ─────────────────────────────────────────────────
+function renderInts() {
+  const grid=gi('int-grid'); if(!grid) return;
+  grid.innerHTML='';
+  INTS.forEach(item => {
+    const on=!!selInts[item.id];
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className=`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold border-2 transition-all cursor-pointer ${on?'int-on':'int-off'}`;
+    btn.innerHTML=`<span>${item.e}</span><span>${lang==='id'?item.id_:item.en}</span>`;
+    btn.onclick=()=>{ if(selInts[item.id]) delete selInts[item.id]; else selInts[item.id]=1; renderInts(); };
+    grid.appendChild(btn);
+  });
+  st('int-count', Object.keys(selInts).length + DICT[lang].intSel);
+}
+
+// ── Pace & Style ───────────────────────────────────────────────────
+function setPace(val) {
+  tPace=val;
+  ['relaxed','moderate','packed'].forEach(p => {
+    const b=gi(`pace-${p}`);
+    if(b) b.className=`${val.toLowerCase()===p?'pref-on':'pref-off'} border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all`;
+  });
+}
+function setStyle(val) {
+  tStyle=val;
+  const m={'Budget':'budget','Mid-range':'mid','Luxury':'luxury'};
+  Object.keys(m).forEach(k => {
+    const b=gi(`style-${m[k]}`);
+    if(b) b.className=`${val===k?'pref-on':'pref-off'} border p-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all`;
+  });
+}
+
+// ── Budget ─────────────────────────────────────────────────────────
+function onBudgetChange() { state.master=parseFloat(gi('budget').value)||0; refreshTracker(); }
+function refreshTracker() {
+  const fmt=n=>`${cur()} ${Math.round(n).toLocaleString()}`;
+  st('spent-val',fmt(state.spent)); st('balance-val',fmt(state.master-state.spent));
+  drawChart();
+}
+function drawChart() {
+  const canvas=gi('budget-chart'); if(!canvas||typeof Chart==='undefined') return;
+  const ctx=canvas.getContext('2d'); const d=DICT[lang];
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels:[d.chart1,d.chart2],datasets:[{data:[state.master,state.spent],backgroundColor:['#10b981','#ef4444'],barThickness:28,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}},grid:{color:'#f1f5f9'}}}}
+  });
+}
+
+// ── Selection bar ──────────────────────────────────────────────────
+function updateSelBar() {
+  const n=document.querySelectorAll('#pool .dest-card.card-sel').length;
+  const d=DICT[lang]; const btn=gi('itin-btn'); const badge=gi('sel-badge');
+  st('bar-count',n+d.intSel);
+  badge.innerText=`${n} ✓`; badge.classList.toggle('hidden',n===0);
+  if(n>0){
+    btn.disabled=false;
+    btn.className='bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-6 py-3 rounded-xl transition-all cursor-pointer shadow-md active:scale-95';
+    st('bar-hint',n+d.intSel);
+  } else {
+    btn.disabled=true;
+    btn.className='bg-slate-200 text-slate-400 font-black text-sm px-6 py-3 rounded-xl transition-all cursor-not-allowed';
+    st('bar-hint',d.barHint);
+  }
+}
+
+// ── Generate destinations ──────────────────────────────────────────
+function generateDests() {
+  const btn=gi('ai-btn'); const d=DICT[lang];
+  btn.innerText=d.btnLoad; btn.disabled=true; onBudgetChange();
+  const intList=Object.keys(selInts).map(id=>{const x=INTS.find(i=>i.id===id);return x?(lang==='id'?x.id_:x.en):id;}).join(', ');
+  fetch('/api/recommendations',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({cities:gi('cities').value,interests:intList,lang,pace:tPace,style:tStyle})})
+  .then(r=>r.json())
+  .then(data=>{
+    if(!Array.isArray(data)) throw new Error(data.error||'Bad response');
+    renderPool(data); gi('itin-bar').classList.remove('hidden');
+  })
+  .catch(e=>alert(`${d.errDests}\n${e.message}`))
+  .finally(()=>{btn.innerText=d.btnAi;btn.disabled=false;});
+}
+
+// ── Render pool ────────────────────────────────────────────────────
+function renderPool(data) {
+  const pool=gi('pool'); pool.innerHTML='';
+  const grouped={},order=[];
+  data.forEach(item=>{ const city=item.city||'Other'; if(!grouped[city]){grouped[city]=[];order.push(city);} grouped[city].push(item); });
+  order.forEach(city=>{
+    const spots=(grouped[city]||[]).filter(s=>s&&s.name);
+    if(!spots.length) return;
+    const safeId=city.replace(/[^a-zA-Z0-9]/g,'-');
+    const sec=document.createElement('div'); sec.className='mb-7';
+    sec.innerHTML=`
+      <div class="flex items-center gap-2 mb-3 pb-1 border-b-2 border-emerald-200">
+        <div class="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-black text-base shrink-0">${city.charAt(0).toUpperCase()}</div>
+        <div><h3 class="font-black text-sm text-slate-800">${city}</h3>
+        <span class="text-[10px] text-emerald-600 font-semibold">${spots.length} destinations</span></div>
+      </div>
+      <div class="grid grid-cols-2 xl:grid-cols-3 gap-3" id="g-${safeId}"></div>`;
+    pool.appendChild(sec);
+    const grid=sec.querySelector(`#g-${safeId}`);
+    spots.forEach(spot=>{
+      const t=CMAP[(spot.type||'').toLowerCase()]||CDEF;
+      const kw=encodeURIComponent((spot.name||'place').split(' ').slice(0,2).join(',') + ',' + city);
+      const card=document.createElement('div');
+      card.className='dest-card flex flex-col rounded-xl border-2 border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-all bg-white';
+      card.dataset.city=city; card.dataset.name=spot.name; card.dataset.type=spot.type||'attraction'; card.dataset.desc=spot.description||'';
+      card.innerHTML=`
+        <div class="relative overflow-hidden bg-slate-100">
+          <img class="dest-img" loading="lazy" alt="${esc(spot.name)}" src="https://loremflickr.com/400/200/${kw}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-fb" style="background:${t.bg}">${t.e}</div>
+          <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 border border-slate-200 flex items-center justify-center shadow">
+            <span class="chk text-emerald-500 text-sm font-black hidden">✓</span>
+          </div>
+          <span class="absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow ${t.tag}">${t.l}</span>
+        </div>
+        <div class="p-3 flex-1 flex flex-col" style="border-top:3px solid ${t.c}">
+          <div class="flex items-start gap-1.5 mb-1"><span class="shrink-0">${t.e}</span>
+            <span class="font-bold text-xs text-slate-800 leading-tight">${esc(spot.name)}</span></div>
+          <p class="text-[11px] text-slate-500 leading-relaxed flex-1">${esc(spot.description)}</p>
+          ${spot.tips?`<p class="text-[10px] text-emerald-600 mt-1.5">💡 ${esc(spot.tips)}</p>`:''}
+          <div class="flex gap-2 mt-2 flex-wrap">
+            ${spot.duration?`<span class="text-[9px] text-slate-400">⏱ ${esc(spot.duration)}</span>`:''}
+            ${spot.priceRange?`<span class="text-[9px] text-emerald-600 font-bold">💰 ${esc(spot.priceRange)}</span>`:''}
+          </div>
+        </div>`;
+      card.addEventListener('click',()=>{
+        const on=card.classList.contains('card-sel');
+        const icon=card.querySelector('.chk');
+        if(!icon) return;
+        if(on){card.classList.remove('card-sel');icon.classList.add('hidden');}
+        else{card.classList.add('card-sel');icon.classList.remove('hidden');}
+        updateSelBar();
+      });
+      grid.appendChild(card);
+    });
+  });
+}
+
+// ── Generate itinerary ─────────────────────────────────────────────
+function generateItinerary() {
+  const cards=document.querySelectorAll('#pool .dest-card.card-sel');
+  if(!cards.length) return;
+  const selected=Array.from(cards).map(c=>({city:c.dataset.city,name:c.dataset.name,type:c.dataset.type,description:c.dataset.desc}));
+  const btn=gi('itin-btn'); const d=DICT[lang];
+  btn.innerText=d.itinLoad; btn.disabled=true;
+  fetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({destinations:selected,days:parseInt(gi('trip-days').value)||5,lang,pace:tPace,style:tStyle,currency:cur()})})
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.error) throw new Error(data.error);
+    // Save trip meta for landing page
+    const meta={destinations:gi('cities').value,days:parseInt(gi('trip-days').value)||5,budget:state.master,currency:cur(),pace:tPace,style:tStyle,generatedAt:new Date().toISOString()};
+    localStorage.setItem('wonderwandr_trip_meta',JSON.stringify(meta));
+    renderItin(data);
+  })
+  .catch(e=>alert(`${d.errItin}\n${e.message}`))
+  .finally(()=>{ btn.innerText=`🗓️ ${d.genItin}`; btn.disabled=false; updateSelBar(); });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ITINERARY RENDERING
+// ══════════════════════════════════════════════════════════════════
+
+function renderItin(itin) {
+  itinData   = JSON.parse(JSON.stringify(itin)); // deep copy
+  adjustMode = false;
+  activeDayIdx = 0;
+  gi('adj-banner').classList.add('hidden');
+  gi('adj-toggle-btn').className = gi('adj-toggle-btn').className.replace(/bg-amber-\S+/g,'').replace(/text-amber-\S+/g,'text-slate-600') + ' border border-slate-200 bg-white';
+  st('itin-heading', DICT[lang].itinHeading);
+  st('itin-summary', itin.summary||'');
+  gi('itin-panel').classList.remove('hidden');
+  gi('itin-panel').scrollIntoView({behavior:'smooth'});
+  buildDayTabs();
+  showDay(0);
+}
+
+function buildDayTabs() {
+  const tabs=gi('day-tabs'); tabs.innerHTML='';
+  const d=DICT[lang];
+  (itinData.days||[]).forEach((day,i)=>{
+    const tab=document.createElement('button');
+    tab.type='button'; tab.id=`tab-${i}`;
+    tab.className=`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${i===0?'tab-active bg-emerald-600 text-white':'bg-slate-100 text-slate-500 hover:bg-emerald-50'}`;
+    const label = day.isTransit ? `🚄 ${d.day} ${day.day}` : `${d.day} ${day.day}`;
+    tab.innerText=label;
+    tab.onclick=()=>showDay(i);
+    tabs.appendChild(tab);
+  });
+}
+
+function showDay(idx) {
+  activeDayIdx=idx;
+  // Update tab styles
+  (itinData.days||[]).forEach((_,i)=>{
+    const t=gi(`tab-${i}`);
+    if(!t) return;
+    t.className=`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${i===idx?'tab-active bg-emerald-600 text-white':'bg-slate-100 text-slate-500 hover:bg-emerald-50'}`;
+  });
+  const content=gi('day-content'); content.innerHTML='';
+  const day=itinData.days[idx]; if(!day) return;
+  if(day.isTransit) content.appendChild(buildTransitDay(day,idx));
+  else              content.appendChild(buildNormalDay(day,idx));
+}
+
+// ── Normal day builder ─────────────────────────────────────────────
+function buildNormalDay(day,dayIdx) {
+  const d=DICT[lang];
+  const at0=CMAP[(day.activities?.[0]?.type||'').toLowerCase()]||CDEF;
+  const wrap=document.createElement('div'); wrap.className=adjustMode?'adj-on':'';
+
+  // Day header
+  const header=document.createElement('div');
+  header.className='flex items-start gap-3 mb-4 pb-3 border-b';
+  header.innerHTML=`
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0" style="background:${at0.c}">${day.day}</div>
+    <div>
+      <div class="font-black text-sm text-slate-800">${esc(day.area||'')}</div>
+      <div class="text-xs font-semibold mt-0.5" style="color:${at0.c}">${esc(day.theme||'')}</div>
+      ${day.transportNote?`<div class="text-[10px] text-blue-500 mt-0.5">🚇 ${esc(day.transportNote)}</div>`:''}
+    </div>`;
+  wrap.appendChild(header);
+
+  // Activities + transport connectors
+  const actWrap=document.createElement('div'); actWrap.className='flex flex-col gap-1';
+  (day.activities||[]).forEach((act,actIdx)=>{
+    // Transport connector (above all but first activity)
+    if(actIdx>0 && act.transport) actWrap.appendChild(buildTransportConnector(act.transport));
+    actWrap.appendChild(buildActivityCard(act,dayIdx,actIdx));
+  });
+  wrap.appendChild(actWrap);
+
+  // Day total
+  if(day.dayTotal){
+    const tot=document.createElement('div');
+    tot.className='mt-3 pt-2 border-t flex justify-between text-xs font-bold';
+    tot.innerHTML=`<span class="text-slate-400">${d.dayTotal}</span><span class="text-slate-800">${esc(day.dayTotal)}</span>`;
+    wrap.appendChild(tot);
+  }
+  return wrap;
+}
+
+// ── Activity card builder ──────────────────────────────────────────
+function buildActivityCard(act,dayIdx,actIdx) {
+  const at=CMAP[(act.type||'').toLowerCase()]||CDEF;
+  const totalDays=(itinData.days||[]).length;
+  const card=document.createElement('div');
+  card.className='act-card flex gap-3 items-start p-2.5 rounded-xl border bg-white hover:shadow-sm transition';
+  card.style.borderLeft=`3px solid ${at.c}`;
+  card.innerHTML=`
+    <div class="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded whitespace-nowrap shrink-0 mt-0.5 time-lbl">${esc(act.time||'')}</div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+        <span class="font-bold text-xs text-slate-800">${esc(act.name||'')}</span>
+        <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-full ${at.tag}">${at.l}</span>
+      </div>
+      <p class="text-[11px] text-slate-500 leading-relaxed">${esc(act.description||'')}</p>
+      ${act.tips?`<p class="text-[10px] text-emerald-600 mt-1">💡 ${esc(act.tips)}</p>`:''}
+      <div class="flex gap-2 mt-1 flex-wrap">
+        ${act.duration?`<span class="text-[9px] text-slate-400">⏱ ${esc(act.duration)}</span>`:''}
+        ${act.cost?`<span class="text-[9px] text-emerald-600 font-bold">💰 ${esc(act.cost)}</span>`:''}
+      </div>
+      <div class="adj-controls">
+        ${actIdx>0?`<button class="adj-btn" onclick="moveAct(${dayIdx},${actIdx},'up')" title="Move up">↑ Up</button>`:''}
+        ${actIdx<(itinData.days[dayIdx].activities.length-1)?`<button class="adj-btn" onclick="moveAct(${dayIdx},${actIdx},'down')" title="Move down">↓ Down</button>`:''}
+        ${dayIdx>0 && !itinData.days[dayIdx-1].isTransit?`<button class="adj-btn" onclick="moveAct(${dayIdx},${actIdx},'prevDay')" title="Move to previous day">◀ Prev Day</button>`:''}
+        ${dayIdx<totalDays-1 && !itinData.days[dayIdx+1]?.isTransit?`<button class="adj-btn" onclick="moveAct(${dayIdx},${actIdx},'nextDay')" title="Move to next day">▶ Next Day</button>`:''}
+        <button class="adj-btn" onclick="editTime(${dayIdx},${actIdx})" title="Change time">⏰ Time</button>
+      </div>
+    </div>`;
+  return card;
+}
+
+// ── Transport connector pill ───────────────────────────────────────
+function buildTransportConnector(tr) {
+  const div=document.createElement('div');
+  div.className='flex items-center gap-2 my-1 ml-10';
+  div.innerHTML=`
+    <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-full text-[10px] font-semibold shadow-sm">
+      🚌 <span class="font-bold">${esc(tr.method||'')}</span>
+      <span class="text-blue-400 mx-1">·</span>
+      <span>⏱ ${esc(tr.duration||'')}</span>
+      ${tr.cost?`<span class="text-blue-400 mx-1">·</span><span class="font-bold">💰 ${esc(tr.cost)}</span>`:''}
+    </div>
+    ${tr.note?`<span class="text-[9px] text-slate-400 italic">${esc(tr.note)}</span>`:''}`;
+  return div;
+}
+
+// ── Transit day builder ────────────────────────────────────────────
+function buildTransitDay(day,dayIdx) {
+  const d=DICT[lang];
+  const wrap=document.createElement('div');
+  wrap.className='transit-day border-2 rounded-xl p-4';
+
+  let optsHtml='';
+  (day.transitOptions||[]).forEach(opt=>{
+    optsHtml+=`
+      <div class="transit-opt ${opt.recommended?'recommended':'normal'}">
+        <div>
+          <span class="font-bold text-xs text-slate-800">${esc(opt.method||'')}</span>
+          ${opt.recommended?`<span class="ml-1.5 text-[9px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-bold">${d.recommended}</span>`:''}
+          ${opt.note?`<p class="text-[10px] text-slate-500 mt-0.5">${esc(opt.note)}</p>`:''}
+        </div>
+        <div class="text-right shrink-0 ml-3">
+          <div class="text-[10px] font-bold text-slate-700">⏱ ${esc(opt.duration||'')}</div>
+          ${opt.cost?`<div class="text-[10px] text-emerald-700 font-bold mt-0.5">💰 ${esc(opt.cost)}</div>`:''}
+        </div>
+      </div>`;
+  });
+
+  wrap.innerHTML=`
+    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-amber-200">
+      <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-sm shrink-0">🚄</div>
+      <div>
+        <div class="font-black text-sm text-slate-800">${esc(day.area||`${day.fromCity} → ${day.toCity}`)}</div>
+        <div class="text-xs font-semibold text-amber-600 mt-0.5">${d.transitDay}</div>
+      </div>
+    </div>
+    <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-2">${d.transitOptions}</p>
+    ${optsHtml||'<p class="text-xs text-slate-400">No options specified.</p>'}`;
+  return wrap;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADJUST MODE
+// ══════════════════════════════════════════════════════════════════
+
+function toggleAdjust() {
+  adjustMode=!adjustMode;
+  const btn=gi('adj-toggle-btn');
+  const banner=gi('adj-banner');
+  if(adjustMode){
+    btn.className='flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-amber-400 bg-amber-50 text-amber-700 cursor-pointer transition';
+    banner.classList.remove('hidden');
+  } else {
+    btn.className='flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200 bg-white text-slate-600 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer';
+    banner.classList.add('hidden');
+  }
+  showDay(activeDayIdx); // re-render current day with/without controls
+}
+
+function moveAct(dayIdx,actIdx,dir) {
+  const days=itinData.days;
+  const acts=days[dayIdx].activities;
+  let act=acts[actIdx];
+
+  if(dir==='up' && actIdx>0){
+    [acts[actIdx],acts[actIdx-1]]=[acts[actIdx-1],acts[actIdx]];
+  } else if(dir==='down' && actIdx<acts.length-1){
+    [acts[actIdx],acts[actIdx+1]]=[acts[actIdx+1],acts[actIdx]];
+  } else if(dir==='prevDay' && dayIdx>0){
+    acts.splice(actIdx,1);
+    days[dayIdx-1].activities.push(act);
+    if(acts.length===0) { showToast('⚠️ Day '+days[dayIdx].day+' now has no activities.'); }
+    showDay(dayIdx-1); buildDayTabs(); return;
+  } else if(dir==='nextDay' && dayIdx<days.length-1){
+    acts.splice(actIdx,1);
+    days[dayIdx+1].activities.unshift(act);
+    if(acts.length===0) { showToast('⚠️ Day '+days[dayIdx].day+' now has no activities.'); }
+    showDay(dayIdx+1); buildDayTabs(); return;
+  }
+  showDay(dayIdx);
+}
+
+function editTime(dayIdx, actIdx) {
+  const act = itinData.days[dayIdx].activities[actIdx];
+
+  // Find the specific time label for this activity card.
+  // Cards are rendered in order, so index matches actIdx.
+  const cards = gi('day-content').querySelectorAll('.act-card');
+  const card  = cards[actIdx];
+  if (!card) return;
+  const timeLbl = card.querySelector('.time-lbl');
+  if (!timeLbl) return;
+
+  // Convert "09:00" → value for <input type="time"> (needs HH:MM)
+  const current = (act.time || '09:00').trim();
+
+  // Build inline time input
+  const input = document.createElement('input');
+  input.type      = 'time';
+  input.value     = current;
+  input.className = 'border-2 border-emerald-400 rounded-lg px-1.5 py-0.5 text-xs font-bold text-slate-700 bg-white cursor-pointer focus:outline-none';
+  input.style.width = '76px';
+
+  // Swap label content for the input
+  timeLbl.innerHTML = '';
+  timeLbl.appendChild(input);
+  input.focus();
+  input.showPicker && input.showPicker(); // open native time picker immediately
+
+  // ── Save on blur or Enter, cancel on Escape ──
+  let saved = false;
+  const save = () => {
+    if (saved) return;
+    saved = true;
+    const v = input.value;
+    if (v) {
+      act.time = v;
+      showToast('⏰ ' + act.name + ' → ' + v);
+    }
+    showDay(dayIdx);
+  };
+  const cancel = () => {
+    if (saved) return;
+    saved = true;
+    showDay(dayIdx); // restore original
+  };
+
+  input.addEventListener('blur',   save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { saved=true; cancel(); }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SAVE / LOAD ITINERARY
+// ══════════════════════════════════════════════════════════════════
+
+function saveItin() {
+  if(!itinData){ showToast('⚠️ Generate an itinerary first.'); return; }
+  try{
+    localStorage.setItem('wonderwandr_itin', JSON.stringify(itinData));
+    localStorage.setItem('wonderwandr_budget',JSON.stringify({master:state.master,spent:state.spent,currency:cur()}));
+    showToast(DICT[lang].saved);
+  }catch(e){ showToast('❌ Save failed: '+e.message); }
+}
+
+function loadItin() {
+  try{
+    const saved=localStorage.getItem('wonderwandr_itin');
+    if(!saved){ showToast(DICT[lang].noSave); return; }
+    renderItin(JSON.parse(saved));
+    showToast(DICT[lang].loaded);
+  }catch(e){ showToast('❌ Load failed: '+e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EXPENSE TRACKER
+// ══════════════════════════════════════════════════════════════════
+
+function addExpense() {
+  const title=(gi('exp-title').value||'').trim();
+  const amt=gi('exp-amt').value;
+  const expCur=gi('exp-cur').value;
+  const spender=(gi('exp-spender').value||'').trim();
+  const date=gi('exp-date').value;
+  const source=gi('exp-source').value;
+  const errEl=gi('exp-err');
+  errEl.classList.add('hidden');
+  if(!title||!amt||!spender||!date||!source){ errEl.innerText=DICT[lang].errFields; errEl.classList.remove('hidden'); return; }
+  const btn=gi('exp-btn'); btn.disabled=true;
+  fetch('/api/exchange',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({amount:amt,fromCurrency:expCur,toCurrency:cur()})})
+  .then(r=>r.json())
+  .then(data=>{
+    const converted=data.convertedAmount||0;
+    state.spent+=converted; refreshTracker();
+    localStorage.setItem('wonderwandr_budget',JSON.stringify({master:state.master,spent:state.spent,currency:cur()}));
+    const empty=gi('ledger-empty'); if(empty) empty.style.display='none';
+    const row=document.createElement('tr'); row.className='border-b border-slate-100 hover:bg-slate-50';
+    row.innerHTML=`
+      <td class="py-1.5 pr-2 whitespace-nowrap">${date}</td>
+      <td class="py-1.5 pr-2 font-semibold text-slate-700">${spender}</td>
+      <td class="py-1.5 pr-2 text-slate-700">${title}</td>
+      <td class="py-1.5 pr-2"><span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold">${source}</span></td>
+      <td class="py-1.5 pr-2 text-right font-mono text-slate-500">${parseFloat(amt).toLocaleString()} ${expCur}</td>
+      <td class="py-1.5 text-right font-bold text-red-500 font-mono whitespace-nowrap">-${cur()} ${Math.round(converted).toLocaleString()}</td>`;
+    gi('ledger-body').prepend(row);
+    gi('exp-title').value=''; gi('exp-amt').value=''; gi('exp-spender').value='';
+    gi('exp-date').value=new Date().toISOString().split('T')[0]; gi('exp-source').value='';
+  })
+  .catch(e=>alert('Exchange error: '+e.message))
+  .finally(()=>{ btn.disabled=false; });
+}
+
+// ── Bootstrap ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  gi('exp-date').value=new Date().toISOString().split('T')[0];
+  setLang('en');
+  onBudgetChange();
+  loadMembers();
+  // Auto-load saved itinerary if ?load=1 in URL
+  if(new URLSearchParams(window.location.search).get('load')==='1'){
+    loadItin();
+    window.history.replaceState({},'',window.location.pathname); // clean URL
+  }
+});
+</script>
+</body>
+</html>

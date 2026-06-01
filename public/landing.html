@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WonderWandr — AI Travel Planner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .gradient-hero {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 70%, #0f766e 100%);
+  }
+  .card-shine {
+    background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
+    box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
+  }
+  .progress-track { background:#e2e8f0; border-radius:99px; height:8px; overflow:hidden; }
+  .progress-fill  { height:100%; border-radius:99px; transition:width .6s ease; }
+  .stat-ring { position:relative; width:80px; height:80px; }
+  .feature-icon { width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px; }
+  .fade-in { animation: fadeIn .5s ease forwards; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+  .btn-primary {
+    display:inline-flex;align-items:center;gap:8px;
+    background:#10b981;color:#fff;font-weight:800;font-size:14px;
+    padding:14px 28px;border-radius:14px;cursor:pointer;
+    box-shadow:0 4px 16px rgba(16,185,129,.35);
+    transition:all .2s; border:none; text-decoration:none;
+  }
+  .btn-primary:hover { background:#059669; transform:translateY(-1px); box-shadow:0 6px 20px rgba(16,185,129,.4); }
+  .btn-secondary {
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.15);color:#fff;font-weight:700;font-size:14px;
+    padding:14px 28px;border-radius:14px;cursor:pointer;
+    border:1.5px solid rgba(255,255,255,.3);transition:all .2s; text-decoration:none;
+  }
+  .btn-secondary:hover { background:rgba(255,255,255,.25); }
+  .btn-outline {
+    display:inline-flex;align-items:center;gap:8px;
+    background:#fff;color:#10b981;font-weight:800;font-size:13px;
+    padding:11px 22px;border-radius:12px;cursor:pointer;
+    border:2px solid #10b981;transition:all .2s; text-decoration:none;
+  }
+  .btn-outline:hover { background:#f0fdf4; }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- ══ HERO ══════════════════════════════════════════════════════ -->
+<section class="gradient-hero text-white px-6 pt-12 pb-16">
+  <!-- Top bar -->
+  <div class="max-w-5xl mx-auto flex items-center justify-between mb-12">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">✈️</span>
+      <h1 class="text-xl font-black">wonder<span class="text-emerald-300">wandr.</span></h1>
+    </div>
+    <a href="index.html" class="text-xs font-bold text-emerald-200 hover:text-white transition">
+      Open Planner →
+    </a>
+  </div>
+
+  <!-- Hero text -->
+  <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 bg-emerald-800/50 border border-emerald-600/50 rounded-full px-3 py-1.5 text-xs font-bold text-emerald-300 mb-5">
+        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+        AI-Powered Travel Planning
+      </div>
+      <h2 class="text-4xl font-black leading-tight mb-4">
+        Plan smarter.<br>
+        <span class="text-emerald-300">Travel better.</span>
+      </h2>
+      <p class="text-emerald-100 text-sm leading-relaxed mb-8 max-w-sm">
+        Generate AI itineraries, track your group budget in real-time, and manage every detail of your multi-city trip — all in one place.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="index.html" class="btn-primary">🚀 Start Planning</a>
+        <button id="hero-load-btn" onclick="goLoad()" class="btn-secondary hidden">📂 Continue Trip</button>
+      </div>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
+        <div class="text-2xl mb-2">🤖</div>
+        <div class="font-bold text-sm">AI Recommendations</div>
+        <div class="text-[11px] text-emerald-200 mt-1">8 curated spots per city tailored to your interests</div>
+      </div>
+      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
+        <div class="text-2xl mb-2">📅</div>
+        <div class="font-bold text-sm">Smart Itinerary</div>
+        <div class="text-[11px] text-emerald-200 mt-1">Day-by-day schedule with transport times & costs</div>
+      </div>
+      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
+        <div class="text-2xl mb-2">💰</div>
+        <div class="font-bold text-sm">Budget Tracker</div>
+        <div class="text-[11px] text-emerald-200 mt-1">Real-time expense tracking with multi-currency support</div>
+      </div>
+      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
+        <div class="text-2xl mb-2">✏️</div>
+        <div class="font-bold text-sm">Adjustable Plans</div>
+        <div class="text-[11px] text-emerald-200 mt-1">Drag activities between days, edit times, save & reload</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SAVED TRIP SUMMARY ════════════════════════════════════════ -->
+<section class="max-w-5xl mx-auto px-6 -mt-6">
+  <!-- No saved trip state -->
+  <div id="no-trip" class="card-shine rounded-2xl p-8 text-center fade-in">
+    <div class="text-4xl mb-3">🗺️</div>
+    <h3 class="font-black text-lg text-slate-700 mb-1">No saved trip yet</h3>
+    <p class="text-sm text-slate-400 mb-5">Generate your first AI itinerary to see your trip summary here.</p>
+    <a href="index.html" class="btn-outline">Start Planning →</a>
+  </div>
+
+  <!-- Saved trip card -->
+  <div id="trip-card" class="hidden card-shine rounded-2xl p-6 fade-in">
+    <!-- Trip header -->
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-5 border-b">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">✈️ Saved Trip</span>
+          <span id="trip-date" class="text-[10px] text-slate-400"></span>
+        </div>
+        <h3 id="trip-title" class="text-xl font-black text-slate-800 mt-1"></h3>
+        <p id="trip-subtitle" class="text-sm text-slate-500 mt-0.5"></p>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <a href="index.html?load=1" class="btn-outline">📂 Continue Trip</a>
+        <a href="index.html" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer no-underline">
+          🆕 New Trip
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div class="bg-slate-50 border rounded-xl p-3 text-center">
+        <div id="stat-days"  class="text-2xl font-black text-emerald-600">—</div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Days</div>
+      </div>
+      <div class="bg-slate-50 border rounded-xl p-3 text-center">
+        <div id="stat-cities" class="text-2xl font-black text-purple-600">—</div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Cities</div>
+      </div>
+      <div class="bg-slate-50 border rounded-xl p-3 text-center">
+        <div id="stat-activities" class="text-2xl font-black text-blue-600">—</div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Activities</div>
+      </div>
+      <div class="bg-slate-50 border rounded-xl p-3 text-center">
+        <div id="stat-members" class="text-2xl font-black text-orange-500">—</div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Travellers</div>
+      </div>
+    </div>
+
+    <!-- Budget summary -->
+    <div class="bg-slate-50 border rounded-xl p-4 mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">💰 Budget Overview</h4>
+        <span id="budget-pct" class="text-xs font-black text-slate-600"></span>
+      </div>
+      <div class="progress-track mb-3">
+        <div id="budget-bar" class="progress-fill bg-emerald-500" style="width:0%"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div>
+          <div id="budget-total" class="font-black text-sm text-slate-700"></div>
+          <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Total Budget</div>
+        </div>
+        <div>
+          <div id="budget-spent" class="font-black text-sm text-red-500"></div>
+          <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Spent</div>
+        </div>
+        <div>
+          <div id="budget-left" class="font-black text-sm text-emerald-600"></div>
+          <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Remaining</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Itinerary quick view: day list -->
+    <div>
+      <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">📋 Trip Overview</h4>
+      <p id="trip-summary-text" class="text-xs text-slate-600 leading-relaxed mb-3"></p>
+      <div id="day-list" class="flex flex-col gap-1.5"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════════════ -->
+<footer class="max-w-5xl mx-auto px-6 py-8 mt-8 text-center">
+  <p class="text-xs text-slate-400">wonderwandr. · AI-powered by Groq · Built with ❤️</p>
+</footer>
+
+<script>
+'use strict';
+
+function goLoad() {
+  window.location.href = 'index.html?load=1';
+}
+
+function fmtMoney(n, currency) {
+  return (currency||'') + ' ' + Math.round(n||0).toLocaleString();
+}
+
+function loadPage() {
+  const itinRaw  = localStorage.getItem('wonderwandr_itin');
+  const metaRaw  = localStorage.getItem('wonderwandr_trip_meta');
+  const budgRaw  = localStorage.getItem('wonderwandr_budget');
+  const membRaw  = localStorage.getItem('wonderwandr_members');
+
+  if (!itinRaw) {
+    gi('no-trip').classList.remove('hidden');
+    gi('trip-card').classList.add('hidden');
+    return;
+  }
+
+  // Show "Continue Trip" button in hero
+  gi('hero-load-btn').classList.remove('hidden');
+  gi('no-trip').classList.add('hidden');
+  gi('trip-card').classList.remove('hidden');
+
+  const itin = JSON.parse(itinRaw);
+  const meta = metaRaw ? JSON.parse(metaRaw) : {};
+  const budg = budgRaw ? JSON.parse(budgRaw) : {master:0, spent:0, currency:'IDR'};
+  const memb = membRaw ? JSON.parse(membRaw) : [];
+
+  const currency = meta.currency || budg.currency || 'IDR';
+  const days = itin.days || [];
+
+  // Title & subtitle
+  const cities = [...new Set(days.filter(d=>!d.isTransit).map(d=>d.city).filter(Boolean))];
+  gi('trip-title').innerText = cities.length ? cities.join(' → ') : (meta.destinations || 'My Trip');
+  gi('trip-subtitle').innerText = `${days.length} days · ${meta.pace||''} pace · ${meta.style||''} accommodation`;
+
+  // Date
+  if (meta.generatedAt) {
+    const dt = new Date(meta.generatedAt);
+    gi('trip-date').innerText = 'Generated ' + dt.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  }
+
+  // Stats
+  const actCount = days.reduce((sum,d)=>sum+(d.activities||[]).length, 0);
+  gi('stat-days').innerText       = days.length;
+  gi('stat-cities').innerText     = cities.length || '—';
+  gi('stat-activities').innerText = actCount;
+  gi('stat-members').innerText    = memb.length || '—';
+
+  // Budget bar
+  const master  = budg.master || 0;
+  const spent   = budg.spent  || 0;
+  const pct     = master > 0 ? Math.min(100, Math.round(spent/master*100)) : 0;
+  const barEl   = gi('budget-bar');
+  barEl.style.width = pct + '%';
+  barEl.style.background = pct>85 ? '#ef4444' : pct>60 ? '#f59e0b' : '#10b981';
+  gi('budget-pct').innerText    = pct + '% used';
+  gi('budget-total').innerText  = fmtMoney(master, currency);
+  gi('budget-spent').innerText  = fmtMoney(spent,  currency);
+  gi('budget-left').innerText   = fmtMoney(master-spent, currency);
+
+  // Trip summary text
+  gi('trip-summary-text').innerText = itin.summary || '';
+
+  // Day list
+  const dayList = gi('day-list');
+  dayList.innerHTML = '';
+  days.forEach(day => {
+    const div = document.createElement('div');
+    if (day.isTransit) {
+      div.className = 'flex items-center gap-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs';
+      div.innerHTML = `
+        <div class="w-6 h-6 bg-amber-400 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0">🚄</div>
+        <div>
+          <span class="font-bold text-amber-700">${day.area||'Travel Day'}</span>
+          <span class="text-amber-500 ml-2 text-[10px]">Transit</span>
+        </div>`;
+    } else {
+      const acts = (day.activities||[]).map(a=>a.name).filter(Boolean);
+      div.className = 'flex items-start gap-2.5 p-2.5 bg-white border border-slate-100 rounded-xl text-xs hover:border-emerald-200 transition';
+      div.innerHTML = `
+        <div class="w-6 h-6 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-[10px] shrink-0 mt-0.5">${day.day}</div>
+        <div class="min-w-0">
+          <div class="font-bold text-slate-700">${day.area||day.city||'Day '+day.day} <span class="text-slate-400 font-normal">— ${day.theme||''}</span></div>
+          <div class="text-[10px] text-slate-400 mt-0.5 truncate">${acts.slice(0,4).join(' · ')+(acts.length>4?' · +'+(acts.length-4)+' more':'')}</div>
+        </div>`;
+    }
+    dayList.appendChild(div);
+  });
+}
+
+function gi(id) { return document.getElementById(id); }
+document.addEventListener('DOMContentLoaded', loadPage);
+</script>
+</body>
+</html>
