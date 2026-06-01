@@ -4,294 +4,371 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WonderWandr — AI Travel Planner</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-  .gradient-hero {
-    background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 70%, #0f766e 100%);
-  }
-  .card-shine {
-    background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
-    box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
-  }
-  .progress-track { background:#e2e8f0; border-radius:99px; height:8px; overflow:hidden; }
-  .progress-fill  { height:100%; border-radius:99px; transition:width .6s ease; }
-  .stat-ring { position:relative; width:80px; height:80px; }
-  .feature-icon { width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px; }
-  .fade-in { animation: fadeIn .5s ease forwards; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
-  .btn-primary {
-    display:inline-flex;align-items:center;gap:8px;
-    background:#10b981;color:#fff;font-weight:800;font-size:14px;
-    padding:14px 28px;border-radius:14px;cursor:pointer;
-    box-shadow:0 4px 16px rgba(16,185,129,.35);
-    transition:all .2s; border:none; text-decoration:none;
-  }
-  .btn-primary:hover { background:#059669; transform:translateY(-1px); box-shadow:0 6px 20px rgba(16,185,129,.4); }
-  .btn-secondary {
-    display:inline-flex;align-items:center;gap:8px;
-    background:rgba(255,255,255,.15);color:#fff;font-weight:700;font-size:14px;
-    padding:14px 28px;border-radius:14px;cursor:pointer;
-    border:1.5px solid rgba(255,255,255,.3);transition:all .2s; text-decoration:none;
-  }
-  .btn-secondary:hover { background:rgba(255,255,255,.25); }
-  .btn-outline {
-    display:inline-flex;align-items:center;gap:8px;
-    background:#fff;color:#10b981;font-weight:800;font-size:13px;
-    padding:11px 22px;border-radius:12px;cursor:pointer;
-    border:2px solid #10b981;transition:all .2s; text-decoration:none;
-  }
-  .btn-outline:hover { background:#f0fdf4; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --em:#059669;--em-l:#d1fae5;
+  --am:#d97706;--am-l:#fef3c7;
+  --bl:#2563eb;--bl-l:#dbeafe;
+  --pk:#db2777;--pk-l:#fce7f3;
+  --pu:#7c3aed;--pu-l:#ede9fe;
+  --te:#0d9488;--te-l:#ccfbf1;
+  --dk:#0f172a;--md:#475569;--sf:#94a3b8;--bg:#fafaf8;
+}
+html{scroll-behavior:smooth}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--dk);overflow-x:hidden}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes blob{0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%}}
+@keyframes scrollX{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.fu{animation:fadeUp .7s ease both}
+.fi{animation:fadeIn .6s ease both}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.35s}
+.d4{animation-delay:.5s}.d5{animation-delay:.65s}.d6{animation-delay:.8s}
+.floating{animation:float 4s ease-in-out infinite}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(250,250,248,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,.06);padding:0 6%;height:64px;
+  display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:"Fraunces",serif;font-size:1.3rem;font-weight:700;letter-spacing:-.5px;
+  color:var(--em);text-decoration:none}
+.logo span{color:var(--dk)}
+.nav-r{display:flex;align-items:center;gap:10px}
+.ltog{display:flex;border:1.5px solid #e2e8f0;border-radius:99px;overflow:hidden;background:#fff}
+.lbtn{padding:5px 13px;font-size:11px;font-weight:700;border:none;background:transparent;
+  cursor:pointer;transition:all .2s;color:var(--sf);font-family:inherit}
+.lbtn.on{background:var(--dk);color:#fff}
+.ncta{background:var(--em);color:#fff;padding:9px 18px;border-radius:99px;
+  font-size:12px;font-weight:700;text-decoration:none;transition:all .2s;white-space:nowrap}
+.ncta:hover{background:#047857;transform:translateY(-1px);box-shadow:0 4px 16px rgba(5,150,105,.3)}
+
+/* HERO */
+.hero{min-height:90vh;padding:80px 6% 60px;display:grid;grid-template-columns:1fr 1fr;
+  gap:40px;align-items:center;position:relative;overflow:hidden}
+.blob{position:absolute;animation:blob 8s ease-in-out infinite;opacity:.1;z-index:0;pointer-events:none}
+.b1{width:480px;height:480px;background:var(--em);top:-80px;right:8%;border-radius:60% 40% 30% 70%/60% 30% 70% 40%}
+.b2{width:320px;height:320px;background:var(--am);bottom:-60px;left:4%;border-radius:30% 60% 70% 40%/50% 60% 30% 60%;animation-delay:3s}
+.b3{width:220px;height:220px;background:var(--bl);top:40%;right:28%;border-radius:50%;animation-delay:5s}
+.htxt{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--em-l);color:var(--em);
+  padding:6px 14px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;margin-bottom:20px}
+.hed{font-family:"Fraunces",serif;font-size:clamp(2.8rem,5vw,4.2rem);font-weight:900;
+  line-height:1.08;letter-spacing:-1.5px;margin-bottom:20px}
+.hed em{font-style:italic;color:var(--em)}
+.hsub{font-size:1rem;color:var(--md);line-height:1.65;max-width:440px;margin-bottom:32px}
+.hact{display:flex;gap:12px;flex-wrap:wrap}
+.bp{background:var(--dk);color:#fff;padding:14px 28px;border-radius:14px;
+  font-size:14px;font-weight:700;text-decoration:none;transition:all .2s;
+  display:inline-flex;align-items:center;gap:8px}
+.bp:hover{background:#1e293b;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.bs{background:transparent;color:var(--dk);padding:14px 22px;border-radius:14px;
+  font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #e2e8f0;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.bs:hover{border-color:var(--em);color:var(--em);background:var(--em-l)}
+
+/* HERO VISUAL */
+.hvis{position:relative;z-index:1;display:flex;align-items:center;justify-content:center}
+.hcard{background:#fff;border-radius:24px;box-shadow:0 24px 64px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.06);
+  padding:22px;width:295px;position:relative;z-index:2}
+.cdot{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.cd{width:10px;height:10px;border-radius:50%}
+.irow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f1f5f9}
+.irow:last-of-type{border-bottom:none}
+.itm{font-size:9px;font-weight:700;color:var(--sf);background:#f8fafc;
+  padding:3px 7px;border-radius:6px;white-space:nowrap;margin-top:2px;flex-shrink:0}
+.inm{font-size:12px;font-weight:700;color:var(--dk)}
+.itag{font-size:9px;font-weight:600;padding:2px 7px;border-radius:99px;margin-top:3px;display:inline-block}
+.tline{display:flex;align-items:center;gap:5px;padding:5px 9px;background:#eff6ff;
+  border-radius:8px;margin:4px 0;font-size:9px;font-weight:600;color:var(--bl)}
+.fbadge{position:absolute;background:#fff;border-radius:14px;padding:9px 13px;
+  box-shadow:0 8px 32px rgba(0,0,0,.12);font-size:11px;font-weight:700;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;z-index:3}
+.fb1{top:-18px;right:-18px;animation:float 4s ease-in-out infinite}
+.fb2{bottom:30px;left:-28px;animation:float 5s ease-in-out infinite .8s}
+.fb3{top:32%;right:-38px;animation:float 3.5s ease-in-out infinite 1.5s}
+.fbd{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px}
+
+/* TRUST */
+.trust{background:var(--dk);color:#fff;padding:18px 5%;
+  display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.ti{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;opacity:.75}
+
+/* SECTIONS */
+section{padding:88px 6%}
+.slbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--em);margin-bottom:10px}
+.stit{font-family:"Fraunces",serif;font-size:clamp(1.9rem,3.5vw,2.7rem);font-weight:700;
+  line-height:1.15;letter-spacing:-.8px;margin-bottom:14px}
+.ssub{font-size:1rem;color:var(--md);line-height:1.65;max-width:500px}
+
+/* FEATURES */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:52px}
+.fc{background:#fff;border-radius:20px;padding:26px;border:1.5px solid #f1f5f9;
+  transition:all .25s;cursor:default;position:relative;overflow:hidden}
+.fc:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.09)}
+.fic{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;
+  justify-content:center;font-size:22px;margin-bottom:14px}
+.ftt{font-size:15px;font-weight:700;margin-bottom:7px}
+.fds{font-size:13px;color:var(--md);line-height:1.6}
+.ftg{display:inline-block;margin-top:12px;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:99px}
+
+/* DESTINATION STRIP */
+.strip{overflow:hidden;padding:0}
+.track{display:flex;gap:14px;animation:scrollX 26s linear infinite;width:max-content}
+.track:hover{animation-play-state:paused}
+.dpill{display:flex;align-items:center;gap:9px;background:#fff;border:1.5px solid #f1f5f9;
+  border-radius:99px;padding:9px 16px;font-size:13px;font-weight:600;
+  white-space:nowrap;flex-shrink:0}
+
+/* STEPS */
+.steps-wrap{background:#f8fafc;border-radius:28px;margin:0 2%;padding:72px 8%}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:40px;margin-top:52px}
+.stp{text-align:center}
+.snum{font-family:"Fraunces",serif;font-size:4rem;font-weight:900;line-height:1;
+  margin-bottom:14px;letter-spacing:-2px}
+.stit2{font-size:15px;font-weight:700;margin-bottom:7px}
+.sdesc{font-size:13px;color:var(--md);line-height:1.6}
+
+/* CTA */
+.cta-wrap{margin:0 2%;border-radius:28px;background:var(--dk);
+  padding:88px 10%;text-align:center;position:relative;overflow:hidden}
+.cblob{position:absolute;border-radius:50%;pointer-events:none}
+.cb1{width:380px;height:380px;background:var(--em);opacity:.1;top:-100px;left:-80px}
+.cb2{width:280px;height:280px;background:var(--am);opacity:.1;bottom:-70px;right:-50px}
+.cta-wrap .slbl{color:var(--em)}
+.cta-wrap .stit{color:#fff}
+.cta-wrap p{color:#94a3b8;max-width:460px;margin:0 auto 32px;line-height:1.65}
+.cta-wrap .bp{background:var(--em);font-size:15px;padding:15px 34px;display:inline-flex}
+.cta-wrap .bp:hover{background:#047857}
+
+/* FOOTER */
+footer{padding:36px 6%;display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:14px}
+footer p{font-size:12px;color:var(--sf)}
+
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;min-height:auto;padding:60px 5% 40px}
+  .hvis{display:none}
+  .trust{gap:20px}
+  .sgrid{grid-template-columns:1fr;gap:28px}
+  .steps-wrap,.cta-wrap{margin:0;border-radius:0}
+}
 </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body>
 
-<!-- ══ HERO ══════════════════════════════════════════════════════ -->
-<section class="gradient-hero text-white px-6 pt-12 pb-16">
-  <!-- Top bar -->
-  <div class="max-w-5xl mx-auto flex items-center justify-between mb-12">
-    <div class="flex items-center gap-2">
-      <span class="text-2xl">✈️</span>
-      <h1 class="text-xl font-black">wonder<span class="text-emerald-300">wandr.</span></h1>
+<nav>
+  <a href="/" class="logo">wonder<span>wandr.</span></a>
+  <div class="nav-r">
+    <div class="ltog">
+      <button class="lbtn on" id="n-en" onclick="setLang('en')">🇬🇧 EN</button>
+      <button class="lbtn"    id="n-id" onclick="setLang('id')">🇮🇩 ID</button>
     </div>
-    <a href="index.html" class="text-xs font-bold text-emerald-200 hover:text-white transition">
-      Open Planner →
-    </a>
+    <a href="/app" class="ncta" id="n-cta">Start Planning →</a>
   </div>
+</nav>
 
-  <!-- Hero text -->
-  <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-    <div>
-      <div class="inline-flex items-center gap-2 bg-emerald-800/50 border border-emerald-600/50 rounded-full px-3 py-1.5 text-xs font-bold text-emerald-300 mb-5">
-        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-        AI-Powered Travel Planning
-      </div>
-      <h2 class="text-4xl font-black leading-tight mb-4">
-        Plan smarter.<br>
-        <span class="text-emerald-300">Travel better.</span>
-      </h2>
-      <p class="text-emerald-100 text-sm leading-relaxed mb-8 max-w-sm">
-        Generate AI itineraries, track your group budget in real-time, and manage every detail of your multi-city trip — all in one place.
-      </p>
-      <div class="flex flex-wrap gap-3">
-        <a href="index.html" class="btn-primary">🚀 Start Planning</a>
-        <button id="hero-load-btn" onclick="goLoad()" class="btn-secondary hidden">📂 Continue Trip</button>
-      </div>
-    </div>
-
-    <!-- Feature pills -->
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
-        <div class="text-2xl mb-2">🤖</div>
-        <div class="font-bold text-sm">AI Recommendations</div>
-        <div class="text-[11px] text-emerald-200 mt-1">8 curated spots per city tailored to your interests</div>
-      </div>
-      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
-        <div class="text-2xl mb-2">📅</div>
-        <div class="font-bold text-sm">Smart Itinerary</div>
-        <div class="text-[11px] text-emerald-200 mt-1">Day-by-day schedule with transport times & costs</div>
-      </div>
-      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
-        <div class="text-2xl mb-2">💰</div>
-        <div class="font-bold text-sm">Budget Tracker</div>
-        <div class="text-[11px] text-emerald-200 mt-1">Real-time expense tracking with multi-currency support</div>
-      </div>
-      <div class="bg-white/10 border border-white/20 rounded-xl p-4">
-        <div class="text-2xl mb-2">✏️</div>
-        <div class="font-bold text-sm">Adjustable Plans</div>
-        <div class="text-[11px] text-emerald-200 mt-1">Drag activities between days, edit times, save & reload</div>
-      </div>
+<!-- HERO -->
+<section class="hero">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="htxt">
+    <div class="eyebrow fu">✨ <span id="h-ey">Powered by Groq AI</span></div>
+    <h1 class="hed fu d1">
+      <span id="h-l1">Plan your</span><br>
+      <em id="h-l2">dream trip</em><br>
+      <span id="h-l3">in seconds</span>
+    </h1>
+    <p class="hsub fu d2" id="h-sb">WonderWandr builds your perfect day-by-day itinerary with transport between every stop, smart budgeting, and one-click adjustments.</p>
+    <div class="hact fu d3">
+      <a href="/app" class="bp">🗺️ <span id="h-c1">Start Planning Free</span></a>
+      <a href="#feat" class="bs"><span id="h-c2">See how it works</span> ↓</a>
     </div>
   </div>
-</section>
-
-<!-- ══ SAVED TRIP SUMMARY ════════════════════════════════════════ -->
-<section class="max-w-5xl mx-auto px-6 -mt-6">
-  <!-- No saved trip state -->
-  <div id="no-trip" class="card-shine rounded-2xl p-8 text-center fade-in">
-    <div class="text-4xl mb-3">🗺️</div>
-    <h3 class="font-black text-lg text-slate-700 mb-1">No saved trip yet</h3>
-    <p class="text-sm text-slate-400 mb-5">Generate your first AI itinerary to see your trip summary here.</p>
-    <a href="index.html" class="btn-outline">Start Planning →</a>
-  </div>
-
-  <!-- Saved trip card -->
-  <div id="trip-card" class="hidden card-shine rounded-2xl p-6 fade-in">
-    <!-- Trip header -->
-    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-5 border-b">
-      <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">✈️ Saved Trip</span>
-          <span id="trip-date" class="text-[10px] text-slate-400"></span>
+  <div class="hvis fi d4">
+    <div style="position:relative">
+      <div class="hcard">
+        <div class="cdot">
+          <div class="cd" style="background:#ef4444"></div>
+          <div class="cd" style="background:#f59e0b"></div>
+          <div class="cd" style="background:#22c55e"></div>
+          <span style="font-size:10px;font-weight:700;color:#94a3b8;margin-left:4px">Day 1 — Busan</span>
         </div>
-        <h3 id="trip-title" class="text-xl font-black text-slate-800 mt-1"></h3>
-        <p id="trip-subtitle" class="text-sm text-slate-500 mt-0.5"></p>
-      </div>
-      <div class="flex gap-2 shrink-0">
-        <a href="index.html?load=1" class="btn-outline">📂 Continue Trip</a>
-        <a href="index.html" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer no-underline">
-          🆕 New Trip
-        </a>
-      </div>
-    </div>
-
-    <!-- Stats row -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      <div class="bg-slate-50 border rounded-xl p-3 text-center">
-        <div id="stat-days"  class="text-2xl font-black text-emerald-600">—</div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Days</div>
-      </div>
-      <div class="bg-slate-50 border rounded-xl p-3 text-center">
-        <div id="stat-cities" class="text-2xl font-black text-purple-600">—</div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Cities</div>
-      </div>
-      <div class="bg-slate-50 border rounded-xl p-3 text-center">
-        <div id="stat-activities" class="text-2xl font-black text-blue-600">—</div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Activities</div>
-      </div>
-      <div class="bg-slate-50 border rounded-xl p-3 text-center">
-        <div id="stat-members" class="text-2xl font-black text-orange-500">—</div>
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Travellers</div>
-      </div>
-    </div>
-
-    <!-- Budget summary -->
-    <div class="bg-slate-50 border rounded-xl p-4 mb-5">
-      <div class="flex items-center justify-between mb-3">
-        <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">💰 Budget Overview</h4>
-        <span id="budget-pct" class="text-xs font-black text-slate-600"></span>
-      </div>
-      <div class="progress-track mb-3">
-        <div id="budget-bar" class="progress-fill bg-emerald-500" style="width:0%"></div>
-      </div>
-      <div class="grid grid-cols-3 gap-3 text-center">
-        <div>
-          <div id="budget-total" class="font-black text-sm text-slate-700"></div>
-          <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Total Budget</div>
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏖️ Beach &amp; Culture</div>
+        <div class="irow">
+          <div class="itm">09:00</div>
+          <div><div class="inm">Haeundae Beach</div>
+          <span class="itag" style="background:#eff6ff;color:#2563eb">Beach</span></div>
         </div>
-        <div>
-          <div id="budget-spent" class="font-black text-sm text-red-500"></div>
-          <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Spent</div>
+        <div class="tline">🚇 Metro Line 1 · 25 min · IDR 1,400</div>
+        <div class="irow">
+          <div class="itm">12:00</div>
+          <div><div class="inm">Jagalchi Market</div>
+          <span class="itag" style="background:#fef2f2;color:#ef4444">Market</span></div>
         </div>
-        <div>
-          <div id="budget-left" class="font-black text-sm text-emerald-600"></div>
-          <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Remaining</div>
+        <div class="tline">🚌 Bus 77 · 15 min · IDR 1,200</div>
+        <div class="irow">
+          <div class="itm">14:30</div>
+          <div><div class="inm">Gamcheon Village</div>
+          <span class="itag" style="background:#f5f3ff;color:#7c3aed">Culture</span></div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between">
+          <span style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase">Day Total</span>
+          <span style="font-size:12px;font-weight:800;color:#059669">IDR 185,000</span>
         </div>
       </div>
-    </div>
-
-    <!-- Itinerary quick view: day list -->
-    <div>
-      <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">📋 Trip Overview</h4>
-      <p id="trip-summary-text" class="text-xs text-slate-600 leading-relaxed mb-3"></p>
-      <div id="day-list" class="flex flex-col gap-1.5"></div>
+      <div class="fbadge fb1"><div class="fbd" style="background:#d1fae5">🤖</div><div><div style="font-size:10px;font-weight:800">AI Generated</div><div style="font-size:9px;color:#94a3b8">in 3 seconds</div></div></div>
+      <div class="fbadge fb2"><div class="fbd" style="background:#fef3c7">💰</div><div><div style="font-size:10px;font-weight:800">Budget Tracker</div><div style="font-size:9px;color:#94a3b8">real-time</div></div></div>
+      <div class="fbadge fb3"><div class="fbd" style="background:#dbeafe">🗓️</div><div><div style="font-size:10px;font-weight:800">5-day plan</div><div style="font-size:9px;color:#94a3b8">auto-scheduled</div></div></div>
     </div>
   </div>
 </section>
 
-<!-- ══ FOOTER ════════════════════════════════════════════════════ -->
-<footer class="max-w-5xl mx-auto px-6 py-8 mt-8 text-center">
-  <p class="text-xs text-slate-400">wonderwandr. · AI-powered by Groq · Built with ❤️</p>
+<!-- TRUST BAR -->
+<div class="trust">
+  <div class="ti">⚡ <span id="t1">Groq LLM — ultra fast AI</span></div>
+  <div class="ti">🌐 <span id="t2">Bilingual EN / ID</span></div>
+  <div class="ti">💱 <span id="t3">Live currency conversion</span></div>
+  <div class="ti">✈️ <span id="t4">Multi-city itineraries</span></div>
+  <div class="ti">🆓 <span id="t5">100% Free</span></div>
+</div>
+
+<!-- DESTINATION STRIP -->
+<section class="strip" style="padding:44px 0">
+  <div class="track">
+    <div class="dpill">🇰🇷 Busan</div><div class="dpill">🇯🇵 Tokyo</div>
+    <div class="dpill">🇮🇩 Bali</div><div class="dpill">🇸🇬 Singapore</div>
+    <div class="dpill">🇹🇭 Bangkok</div><div class="dpill">🇰🇷 Seoul</div>
+    <div class="dpill">🇯🇵 Osaka</div><div class="dpill">🇮🇩 Yogyakarta</div>
+    <div class="dpill">🇲🇾 Kuala Lumpur</div><div class="dpill">🇻🇳 Hanoi</div>
+    <div class="dpill">🇵🇭 Palawan</div><div class="dpill">🇹🇼 Taipei</div>
+    <div class="dpill">🇰🇷 Busan</div><div class="dpill">🇯🇵 Tokyo</div>
+    <div class="dpill">🇮🇩 Bali</div><div class="dpill">🇸🇬 Singapore</div>
+    <div class="dpill">🇹🇭 Bangkok</div><div class="dpill">🇰🇷 Seoul</div>
+    <div class="dpill">🇯🇵 Osaka</div><div class="dpill">🇮🇩 Yogyakarta</div>
+    <div class="dpill">🇲🇾 Kuala Lumpur</div><div class="dpill">🇻🇳 Hanoi</div>
+    <div class="dpill">🇵🇭 Palawan</div><div class="dpill">🇹🇼 Taipei</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="feat">
+  <div class="slbl" id="f-lbl">What's inside</div>
+  <h2 class="stit" id="f-tit">Everything you need<br>for the perfect trip</h2>
+  <p class="ssub" id="f-sub">From generating your first destination idea to tracking every expense — WonderWandr handles it all.</p>
+  <div class="fgrid">
+    <div class="fc"><div class="fic" style="background:var(--em-l)">🤖</div><div class="ftt" id="f1t">AI Destination Pool</div><div class="fds" id="f1d">Generates 8 curated spots per city tailored to your interests, pace, and accommodation style.</div><span class="ftg" style="background:var(--em-l);color:var(--em)" id="f1g">Groq AI</span></div>
+    <div class="fc"><div class="fic" style="background:var(--bl-l)">🗓️</div><div class="ftt" id="f2t">Smart Itinerary</div><div class="fds" id="f2d">Schedules your days respecting real opening hours. Packed trips start at 7AM, relaxed at 10AM.</div><span class="ftg" style="background:var(--bl-l);color:var(--bl)" id="f2g">Auto-schedule</span></div>
+    <div class="fc"><div class="fic" style="background:var(--am-l)">🚇</div><div class="ftt" id="f3t">Transport Guide</div><div class="fds" id="f3d">Every activity shows how to get there — metro, bus, taxi or walk — with travel time and cost.</div><span class="ftg" style="background:var(--am-l);color:var(--am)" id="f3g">Between stops</span></div>
+    <div class="fc"><div class="fic" style="background:var(--pk-l)">💰</div><div class="ftt" id="f4t">Budget Tracker</div><div class="fds" id="f4d">Log expenses in any currency (IDR, USD, KRW, JPY…) and see your balance update in real-time.</div><span class="ftg" style="background:var(--pk-l);color:var(--pk)" id="f4g">Multi-currency</span></div>
+    <div class="fc"><div class="fic" style="background:var(--pu-l)">✏️</div><div class="ftt" id="f5t">Adjust Mode</div><div class="fds" id="f5d">Drag activities between days, reorder them, or change their time — all with a single click.</div><span class="ftg" style="background:var(--pu-l);color:var(--pu)" id="f5g">Fully editable</span></div>
+    <div class="fc"><div class="fic" style="background:var(--te-l)">💾</div><div class="ftt" id="f6t">Save &amp; Load</div><div class="fds" id="f6d">Save your itinerary to the browser and reload it anytime — no account required.</div><span class="ftg" style="background:var(--te-l);color:var(--te)" id="f6g">Offline-ready</span></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section style="padding:0 6% 88px">
+  <div class="steps-wrap">
+    <div class="slbl" id="s-lbl">Simple process</div>
+    <h2 class="stit" id="s-tit">From idea to itinerary<br>in three steps</h2>
+    <div class="sgrid">
+      <div class="stp"><div class="snum" style="color:var(--em)">01</div><div class="stit2" id="s1t">Tell us your trip</div><div class="sdesc" id="s1d">Enter your destinations, number of days, budget, and interests. Pick your travel pace and accommodation style.</div></div>
+      <div class="stp"><div class="snum" style="color:var(--bl)">02</div><div class="stit2" id="s2t">Pick your spots</div><div class="sdesc" id="s2d">AI generates 8 destination cards per city. Tap the ones you like — they go into your itinerary.</div></div>
+      <div class="stp"><div class="snum" style="color:var(--pk)">03</div><div class="stit2" id="s3t">Get your plan</div><div class="sdesc" id="s3d">Your full day-by-day itinerary with transport, times, costs, and tips — ready to follow or adjust.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding:0 6% 88px">
+  <div class="cta-wrap">
+    <div class="cblob cb1"></div><div class="cblob cb2"></div>
+    <div style="position:relative;z-index:1">
+      <div class="slbl" id="c-lbl">Ready to go?</div>
+      <h2 class="stit" id="c-tit">Your next adventure<br>starts here</h2>
+      <p id="c-sub">No sign-up needed. Free forever. Just type a destination and let WonderWandr do the rest.</p>
+      <a href="/app" class="bp">✈️ &nbsp;<span id="c-btn">Start Planning — It's Free</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="/" class="logo">wonder<span>wandr.</span></a>
+  <p id="ft">Built with ❤️ using Groq AI, Express &amp; Tailwind CSS</p>
 </footer>
 
 <script>
 'use strict';
-
-function goLoad() {
-  window.location.href = 'index.html?load=1';
+var C={
+  en:{cta:'Start Planning →',ey:'Powered by Groq AI',l1:'Plan your',l2:'dream trip',l3:'in seconds',
+    sb:'WonderWandr builds your perfect day-by-day itinerary with transport between every stop, smart budgeting, and one-click adjustments.',
+    c1:'Start Planning Free',c2:'See how it works',
+    t1:'Groq LLM — ultra fast AI',t2:'Bilingual EN / ID',t3:'Live currency conversion',t4:'Multi-city itineraries',t5:'100% Free',
+    flbl:"What's inside",ftit:'Everything you need<br>for the perfect trip',fsub:"From generating your first destination idea to tracking every expense — WonderWandr handles it all.",
+    f1t:'AI Destination Pool',f1d:'Generates 8 curated spots per city tailored to your interests, pace, and accommodation style.',f1g:'Groq AI',
+    f2t:'Smart Itinerary',f2d:'Schedules your days respecting real opening hours. Packed trips start at 7AM, relaxed at 10AM.',f2g:'Auto-schedule',
+    f3t:'Transport Guide',f3d:'Every activity shows how to get there — metro, bus, taxi or walk — with travel time and cost.',f3g:'Between stops',
+    f4t:'Budget Tracker',f4d:'Log expenses in any currency (IDR, USD, KRW, JPY…) and see your balance update in real-time.',f4g:'Multi-currency',
+    f5t:'Adjust Mode',f5d:'Drag activities between days, reorder them, or change their time — all with a single click.',f5g:'Fully editable',
+    f6t:'Save & Load',f6d:'Save your itinerary to the browser and reload it anytime — no account required.',f6g:'Offline-ready',
+    slbl:'Simple process',stit:'From idea to itinerary<br>in three steps',
+    s1t:'Tell us your trip',s1d:'Enter your destinations, number of days, budget, and interests. Pick your travel pace and accommodation style.',
+    s2t:'Pick your spots',s2d:'AI generates 8 destination cards per city. Tap the ones you like — they go into your itinerary.',
+    s3t:'Get your plan',s3d:'Your full day-by-day itinerary with transport, times, costs, and tips — ready to follow or adjust.',
+    clbl:'Ready to go?',ctit:'Your next adventure<br>starts here',
+    csub:'No sign-up needed. Free forever. Just type a destination and let WonderWandr do the rest.',
+    cbtn:"Start Planning — It's Free",
+    ft:'Built with ❤️ using Groq AI, Express & Tailwind CSS'},
+  id:{cta:'Mulai Rencanakan →',ey:'Didukung Groq AI',l1:'Rencanakan',l2:'liburan impianmu',l3:'dalam hitungan detik',
+    sb:'WonderWandr membuat itinerary hari-per-hari yang sempurna lengkap dengan transportasi, pelacak anggaran cerdas, dan penyesuaian satu klik.',
+    c1:'Mulai Gratis Sekarang',c2:'Lihat cara kerjanya',
+    t1:'Groq LLM — AI super cepat',t2:'Bilingual EN / ID',t3:'Konversi mata uang real-time',t4:'Itinerary multi-kota',t5:'100% Gratis',
+    flbl:'Fitur unggulan',ftit:'Semua yang kamu butuhkan<br>untuk liburan sempurna',fsub:'Dari ide destinasi pertama sampai tracking pengeluaran terakhir — WonderWandr mengurus semuanya.',
+    f1t:'Kolam Destinasi AI',f1d:'Menghasilkan 8 destinasi per kota sesuai minat, tempo perjalanan, dan gaya akomodasi kamu.',f1g:'Groq AI',
+    f2t:'Itinerary Cerdas',f2d:'Menjadwalkan harimu dengan mempertimbangkan jam buka nyata. Padat mulai jam 7, santai mulai jam 10.',f2g:'Auto-jadwal',
+    f3t:'Panduan Transportasi',f3d:'Setiap aktivitas menunjukkan cara ke sana — metro, bus, taksi, atau jalan kaki — lengkap dengan waktu dan biaya.',f3g:'Antar destinasi',
+    f4t:'Pelacak Anggaran',f4d:'Catat pengeluaran dalam mata uang apapun (IDR, USD, KRW, JPY…) dan lihat saldo real-time.',f4g:'Multi-mata uang',
+    f5t:'Mode Penyesuaian',f5d:'Geser aktivitas antar hari, ubah urutannya, atau ganti waktunya — cukup satu klik.',f5g:'Bisa diedit',
+    f6t:'Simpan & Muat',f6d:'Simpan itinerary ke browser dan muat kembali kapan saja — tanpa perlu akun.',f6g:'Offline-ready',
+    slbl:'Prosesnya mudah',stit:'Dari ide ke itinerary<br>dalam tiga langkah',
+    s1t:'Ceritakan tripmu',s1d:'Masukkan destinasi, jumlah hari, anggaran, dan minat. Pilih tempo perjalanan dan gaya akomodasi.',
+    s2t:'Pilih destinasimu',s2d:'AI menghasilkan 8 kartu destinasi per kota. Tap yang kamu suka — langsung masuk ke itinerary.',
+    s3t:'Dapatkan rencanamu',s3d:'Itinerary hari-per-hari lengkap dengan transportasi, jam, biaya, dan tips — siap diikuti atau disesuaikan.',
+    clbl:'Siap berangkat?',ctit:'Petualangan berikutnya<br>dimulai di sini',
+    csub:'Tanpa daftar akun. Gratis selamanya. Cukup ketik destinasi dan biarkan WonderWandr bekerja.',
+    cbtn:'Mulai Rencanakan — Gratis',
+    ft:'Dibuat dengan ❤️ menggunakan Groq AI, Express & Tailwind CSS'}
+};
+function gi(id){return document.getElementById(id)}
+function st(id,v){var e=gi(id);if(e)e.innerText=v}
+function sh(id,v){var e=gi(id);if(e)e.innerHTML=v}
+function setLang(l){
+  var c=C[l];
+  gi('n-en').className='lbtn'+(l==='en'?' on':'');
+  gi('n-id').className='lbtn'+(l==='id'?' on':'');
+  st('n-cta',c.cta);
+  st('h-ey',c.ey);st('h-l1',c.l1);st('h-l2',c.l2);st('h-l3',c.l3);
+  st('h-sb',c.sb);st('h-c1',c.c1);
+  gi('h-c2').querySelector('span').innerText=c.c2;
+  for(var i=1;i<=5;i++) st('t'+i,c['t'+i]);
+  st('f-lbl',c.flbl);sh('f-tit',c.ftit);st('f-sub',c.fsub);
+  for(var i=1;i<=6;i++){st('f'+i+'t',c['f'+i+'t']);st('f'+i+'d',c['f'+i+'d']);st('f'+i+'g',c['f'+i+'g']);}
+  st('s-lbl',c.slbl);sh('s-tit',c.stit);
+  for(var i=1;i<=3;i++){st('s'+i+'t',c['s'+i+'t']);st('s'+i+'d',c['s'+i+'d']);}
+  st('c-lbl',c.clbl);sh('c-tit',c.ctit);st('c-sub',c.csub);st('c-btn',c.cbtn);
+  st('ft',c.ft);
 }
-
-function fmtMoney(n, currency) {
-  return (currency||'') + ' ' + Math.round(n||0).toLocaleString();
-}
-
-function loadPage() {
-  const itinRaw  = localStorage.getItem('wonderwandr_itin');
-  const metaRaw  = localStorage.getItem('wonderwandr_trip_meta');
-  const budgRaw  = localStorage.getItem('wonderwandr_budget');
-  const membRaw  = localStorage.getItem('wonderwandr_members');
-
-  if (!itinRaw) {
-    gi('no-trip').classList.remove('hidden');
-    gi('trip-card').classList.add('hidden');
-    return;
-  }
-
-  // Show "Continue Trip" button in hero
-  gi('hero-load-btn').classList.remove('hidden');
-  gi('no-trip').classList.add('hidden');
-  gi('trip-card').classList.remove('hidden');
-
-  const itin = JSON.parse(itinRaw);
-  const meta = metaRaw ? JSON.parse(metaRaw) : {};
-  const budg = budgRaw ? JSON.parse(budgRaw) : {master:0, spent:0, currency:'IDR'};
-  const memb = membRaw ? JSON.parse(membRaw) : [];
-
-  const currency = meta.currency || budg.currency || 'IDR';
-  const days = itin.days || [];
-
-  // Title & subtitle
-  const cities = [...new Set(days.filter(d=>!d.isTransit).map(d=>d.city).filter(Boolean))];
-  gi('trip-title').innerText = cities.length ? cities.join(' → ') : (meta.destinations || 'My Trip');
-  gi('trip-subtitle').innerText = `${days.length} days · ${meta.pace||''} pace · ${meta.style||''} accommodation`;
-
-  // Date
-  if (meta.generatedAt) {
-    const dt = new Date(meta.generatedAt);
-    gi('trip-date').innerText = 'Generated ' + dt.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  }
-
-  // Stats
-  const actCount = days.reduce((sum,d)=>sum+(d.activities||[]).length, 0);
-  gi('stat-days').innerText       = days.length;
-  gi('stat-cities').innerText     = cities.length || '—';
-  gi('stat-activities').innerText = actCount;
-  gi('stat-members').innerText    = memb.length || '—';
-
-  // Budget bar
-  const master  = budg.master || 0;
-  const spent   = budg.spent  || 0;
-  const pct     = master > 0 ? Math.min(100, Math.round(spent/master*100)) : 0;
-  const barEl   = gi('budget-bar');
-  barEl.style.width = pct + '%';
-  barEl.style.background = pct>85 ? '#ef4444' : pct>60 ? '#f59e0b' : '#10b981';
-  gi('budget-pct').innerText    = pct + '% used';
-  gi('budget-total').innerText  = fmtMoney(master, currency);
-  gi('budget-spent').innerText  = fmtMoney(spent,  currency);
-  gi('budget-left').innerText   = fmtMoney(master-spent, currency);
-
-  // Trip summary text
-  gi('trip-summary-text').innerText = itin.summary || '';
-
-  // Day list
-  const dayList = gi('day-list');
-  dayList.innerHTML = '';
-  days.forEach(day => {
-    const div = document.createElement('div');
-    if (day.isTransit) {
-      div.className = 'flex items-center gap-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs';
-      div.innerHTML = `
-        <div class="w-6 h-6 bg-amber-400 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0">🚄</div>
-        <div>
-          <span class="font-bold text-amber-700">${day.area||'Travel Day'}</span>
-          <span class="text-amber-500 ml-2 text-[10px]">Transit</span>
-        </div>`;
-    } else {
-      const acts = (day.activities||[]).map(a=>a.name).filter(Boolean);
-      div.className = 'flex items-start gap-2.5 p-2.5 bg-white border border-slate-100 rounded-xl text-xs hover:border-emerald-200 transition';
-      div.innerHTML = `
-        <div class="w-6 h-6 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-[10px] shrink-0 mt-0.5">${day.day}</div>
-        <div class="min-w-0">
-          <div class="font-bold text-slate-700">${day.area||day.city||'Day '+day.day} <span class="text-slate-400 font-normal">— ${day.theme||''}</span></div>
-          <div class="text-[10px] text-slate-400 mt-0.5 truncate">${acts.slice(0,4).join(' · ')+(acts.length>4?' · +'+(acts.length-4)+' more':'')}</div>
-        </div>`;
-    }
-    dayList.appendChild(div);
-  });
-}
-
-function gi(id) { return document.getElementById(id); }
-document.addEventListener('DOMContentLoaded', loadPage);
+document.addEventListener('DOMContentLoaded',function(){setLang('en');});
 </script>
 </body>
 </html>
