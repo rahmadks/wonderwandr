@@ -9,6 +9,43 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Model fallback list ───────────────────────────────────────────
+// If the first model hits a rate limit (429), automatically retry
+// with the next model in the list.
+const MODELS = [
+    'llama-3.3-70b-versatile',   // best quality, try first
+    'llama-3.1-8b-instant',      // fallback — separate daily quota
+    'gemma2-9b-it',              // second fallback
+];
+
+async function groqCall(messages, opts = {}) {
+    let lastError;
+    for (const model of MODELS) {
+        try {
+            console.log(`[groq] trying model: ${model}`);
+            const res = await groq.chat.completions.create({
+                messages,
+                model,
+                temperature:     opts.temperature     ?? 0.4,
+                max_tokens:      opts.max_tokens      ?? 3000,
+                response_format: opts.response_format ?? { type: 'json_object' },
+            });
+            console.log(`[groq] success with: ${model}`);
+            return res;
+        } catch (e) {
+            lastError = e;
+            const isRateLimit = e.status === 429 ||
+                                (e.message && e.message.includes('rate_limit'));
+            if (isRateLimit) {
+                console.warn(`[groq] rate limit on ${model}, trying next...`);
+                continue;   // try next model
+            }
+            throw e;        // non-rate-limit error → stop immediately
+        }
+    }
+    throw lastError;        // all models exhausted
+}
+
 // ── JSON parser ───────────────────────────────────────────────────
 function parseAiJson(raw) {
     let s = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'')
@@ -59,18 +96,18 @@ app.post('/api/recommendations',async(req,res)=>{
         'Rules:\n'+
         '- Return EXACTLY 30 unique spots per city (include ALL '+cityList.length+' cities)\n'+
         '- Every object MUST have: city, name, type, description, tips, duration, priceRange\n'+
-        '- Types: beach,food,culture,nature,shopping,entertainment,temple,market,museum,spa\n'+ 
+        '- Types: beach,food,culture,nature,shopping,entertainment,temple,market,museum,spa\n'+
         'Respond ONLY with JSON:\n'+
         '{"destinations":[\n'+
         '{"city":"Busan","name":"Haeundae Beach","type":"beach","description":"Famous beach.","tips":"Go early.","duration":"2-3h","priceRange":"Free"},\n'+
         '{"city":"Busan","name":"Jagalchi Market","type":"market","description":"Seafood market.","tips":"Try 2nd floor.","duration":"1-2h","priceRange":"varies"}\n'+
         ']}';
     try{
-        const c=await groq.chat.completions.create({
-            messages:[{role:'system',content:'Travel planner. JSON only. No markdown.'},{role:'user',content:prompt}],
-            model:'llama-3.3-70b-versatile',temperature:0.4,max_tokens:3500,
-            response_format:{type:'json_object'}
-        });
+        const c=await groqCall(
+            [{role:'system',content:'Travel planner. JSON only. No markdown.'},
+             {role:'user',content:prompt}],
+            {temperature:0.4, max_tokens:3500}
+        );
         const data=parseAiJson(c.choices[0].message.content);
         const list=Array.isArray(data)?data:(data.destinations||data.results||data.places||[]);
         console.log('[recs] spots:',list.length);
@@ -84,15 +121,12 @@ app.post('/api/itinerary',async(req,res)=>{
     const L=lang==='id'?'Indonesian':'English';
     const totalDays=parseInt(days)||5;
     const spotList=destinations.map(d=>d.city+': '+d.name+' ('+d.type+')').join(', ');
-
-    // Determine start time and activity count by pace
     const paceRules={
-        'Packed':   {start:'07:00', count:'4-5', note:'Visit high-energy spots early'},
-        'Moderate': {start:'09:00', count:'3-4', note:'Balanced mix of activities and rest'},
-        'Relaxed':  {start:'10:00', count:'2-3', note:'Leisurely pacing with free time'}
+        'Packed':   {start:'07:00',count:'4-5',note:'Visit high-energy spots early'},
+        'Moderate': {start:'08:00',count:'3-4',note:'Balanced mix of activities and rest'},
+        'Relaxed':  {start:'09:00',count:'2-3',note:'Leisurely pacing with free time'}
     };
     const pr=paceRules[pace]||paceRules['Moderate'];
-
     const prompt=
         'Create EXACTLY '+totalDays+' days of travel itinerary.\n'+
         'Spots to schedule: '+spotList+'\n'+
@@ -120,16 +154,12 @@ app.post('/api/itinerary',async(req,res)=>{
         '{"method":"Express Bus","duration":"4h 30min","cost":"'+currency+' 140000","recommended":false,"note":"Budget option"}\n'+
         '],"activities":[],"dayTotal":"'+currency+' 280000"}\n'+
         ']}';
-
     try{
-        const c=await groq.chat.completions.create({
-            messages:[
-                {role:'system',content:'Travel planner. JSON only. No markdown. Follow day count and transport rules exactly.'},
-                {role:'user',content:prompt}
-            ],
-            model:'llama-3.3-70b-versatile',temperature:0.4,max_tokens:4000,
-            response_format:{type:'json_object'}
-        });
+        const c=await groqCall(
+            [{role:'system',content:'Travel planner. JSON only. No markdown. Follow day count and transport rules exactly.'},
+             {role:'user',content:prompt}],
+            {temperature:0.4, max_tokens:4000}
+        );
         const data=parseAiJson(c.choices[0].message.content);
         if(data.days&&data.days.length>totalDays){
             data.days=data.days.slice(0,totalDays);
