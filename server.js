@@ -57,7 +57,7 @@ app.post('/api/recommendations',async(req,res)=>{
         'Travel pace: '+pace+' | Accommodation: '+style+'\n'+
         'Language for all text: '+L+'\n'+
         'Rules:\n'+
-        '- Return EXACTLY 8 spots per city (include ALL '+cityList.length+' cities)\n'+
+        '- Return EXACTLY 30 unique spots per city (include ALL '+cityList.length+' cities)\n'+
         '- Every object MUST have: city, name, type, description, tips, duration, priceRange\n'+
         '- Types: beach,food,culture,nature,shopping,entertainment,temple,market,museum,spa\n'+
         'Respond ONLY with JSON:\n'+
